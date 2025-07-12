@@ -4,7 +4,17 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { after } from "next/server";
 
-const groq = new Groq();
+let groq: Groq | null = null;
+function getGroq() {
+  if (groq) return groq;
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.error("GROQ_API_KEY is not set");
+    return null;
+  }
+  groq = new Groq({ apiKey });
+  return groq;
+}
 
 const schema = zfd.formData({
 	input: z.union([zfd.text(), zfd.file()]),
@@ -34,12 +44,16 @@ export async function POST(request: Request) {
 		"text completion " + request.headers.get("x-vercel-id") || "local"
 	);
 
-	const completion = await groq.chat.completions.create({
+        const groqClient = getGroq();
+        if (!groqClient)
+                return new Response("Server configuration error", { status: 500 });
+
+        const completion = await groqClient.chat.completions.create({
 		model: "llama3-8b-8192",
 		messages: [
 			{
 				role: "system",
-				content: `- You are Swift, a friendly and helpful voice assistant.
+                                content: `- You are Newomen, a friendly and helpful voice assistant.
 			- Respond briefly to the user's request, and do not provide unnecessary information.
 			- If you don't understand the user's request, ask for clarification.
 			- You do not have access to up-to-date information, so you should not provide real-time data.
@@ -133,13 +147,16 @@ async function time() {
 }
 
 async function getTranscript(input: string | File) {
-	if (typeof input === "string") return input;
+        if (typeof input === "string") return input;
 
-	try {
-		const { text } = await groq.audio.transcriptions.create({
-			file: input,
-			model: "whisper-large-v3",
-		});
+        const groqClient = getGroq();
+        if (!groqClient) return null;
+
+        try {
+                const { text } = await groqClient.audio.transcriptions.create({
+                        file: input,
+                        model: "whisper-large-v3",
+                });
 
 		return text.trim() || null;
 	} catch {
