@@ -17,6 +17,8 @@ export default function Onboarding() {
   const [language, setLanguage] = useState<string>("English");
   const [focus, setFocus] = useState<string[]>([]);
 
+  const totalSteps = 2;
+
   useEffect(() => {
     const savedLang = localStorage.getItem("language");
     const savedFocus = localStorage.getItem("focusAreas");
@@ -43,8 +45,13 @@ export default function Onboarding() {
     }
   }
 
+  function back() {
+    if (step === 2) setStep(1);
+  }
+
   return (
     <div className="max-w-md mx-auto space-y-4">
+      <progress value={step} max={totalSteps} className="w-full h-2" />
       {step === 1 && (
         <>
           <h1 className="text-xl font-bold text-center">Choose language</h1>
@@ -89,12 +96,22 @@ export default function Onboarding() {
         </>
       )}
 
-      <button
-        onClick={next}
-        className="w-full p-2 bg-black text-white rounded"
-      >
-        {step === 1 ? "Next" : "Finish"}
-      </button>
+      <div className="flex gap-2">
+        {step === 2 && (
+          <button
+            onClick={back}
+            className="p-2 w-24 rounded border border-black dark:border-white"
+          >
+            Back
+          </button>
+        )}
+        <button
+          onClick={next}
+          className="flex-1 p-2 bg-black text-white rounded"
+        >
+          {step === 1 ? "Next" : "Finish"}
+        </button>
+      </div>
     </div>
   );
 }
