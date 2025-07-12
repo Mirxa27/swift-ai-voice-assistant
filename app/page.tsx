@@ -2,11 +2,11 @@
 
 import clsx from "clsx";
 import {
-	useActionState,
-	useEffect,
-	useRef,
-	useState,
-	startTransition,
+        useActionState,
+        useEffect,
+        useRef,
+        useState,
+        startTransition,
 } from "react";
 import { toast } from "sonner";
 import { EnterIcon, LoadingIcon } from "@/lib/icons";
@@ -30,6 +30,12 @@ export default function Home() {
         const [affirmation, setAffirmation] = useState("");
         const [focus, setFocus] = useState<string[]>([]);
         const [progress, setProgress] = useState<Record<string, number>>({});
+
+        const initialMessages: Array<Message> = (() => {
+                if (typeof localStorage === "undefined") return [];
+                const stored = localStorage.getItem("journal");
+                return stored ? JSON.parse(stored) : [];
+        })();
 
         useEffect(() => {
                 const lang = localStorage.getItem("language");
@@ -154,9 +160,13 @@ export default function Home() {
 				latency,
 			},
 		];
-	}, []);
+        }, initialMessages);
 
-	function handleFormSubmit(e: React.FormEvent) {
+        useEffect(() => {
+                localStorage.setItem("journal", JSON.stringify(messages));
+        }, [messages]);
+
+        function handleFormSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		startTransition(() => submit(input));
 	}
@@ -239,6 +249,16 @@ export default function Home() {
                                                 <p>
                                                         <A href="/admin">
                                                                 Admin Panel
+                                                        </A>
+                                                </p>
+                                                <p>
+                                                        <A href="/balance">
+                                                                Balance Wheel
+                                                        </A>
+                                                </p>
+                                                <p>
+                                                        <A href="/journal">
+                                                                Journal
                                                         </A>
                                                 </p>
 

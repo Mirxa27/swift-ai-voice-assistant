@@ -73,7 +73,26 @@ export async function POST(request: Request) {
 		],
 	});
 
-	const response = completion.choices[0].message.content;
+        let response = completion.choices[0].message.content || "";
+        const crisisKeywords = [
+                "suicide",
+                "kill myself",
+                "self harm",
+                "harm myself",
+                "abuse",
+        ];
+        const crisisMessage =
+                "It sounds like you are going through a very difficult time. For your safety, please contact a local crisis hotline or trusted professional.";
+
+        const transcriptLower = transcript.toLowerCase();
+        const responseLower = response.toLowerCase();
+        const crisisDetected = crisisKeywords.some(
+                (k) => transcriptLower.includes(k) || responseLower.includes(k)
+        );
+        if (crisisDetected) {
+                console.warn("Crisis detected in conversation");
+                response = crisisMessage;
+        }
 	console.timeEnd(
 		"text completion " + request.headers.get("x-vercel-id") || "local"
 	);
@@ -120,12 +139,13 @@ export async function POST(request: Request) {
 		console.timeEnd("stream " + request.headers.get("x-vercel-id") || "local");
 	});
 
-	return new Response(voice.body, {
-		headers: {
-			"X-Transcript": encodeURIComponent(transcript),
-			"X-Response": encodeURIComponent(response),
-		},
-	});
+        return new Response(voice.body, {
+                headers: {
+                        "X-Transcript": encodeURIComponent(transcript),
+                        "X-Response": encodeURIComponent(response),
+                        ...(crisisDetected ? { "X-Crisis": "1" } : {}),
+                },
+        });
 }
 
 async function location() {
