@@ -13,6 +13,7 @@ import { EnterIcon, LoadingIcon } from "@/lib/icons";
 import { usePlayer } from "@/lib/usePlayer";
 import { track } from "@vercel/analytics";
 import { useMicVAD, utils } from "@ricky0123/vad-react";
+import { useRouter } from "next/navigation";
 
 type Message = {
 	role: "user" | "assistant";
@@ -21,12 +22,49 @@ type Message = {
 };
 
 export default function Home() {
-	const [input, setInput] = useState("");
-	const inputRef = useRef<HTMLInputElement>(null);
-	const player = usePlayer();
+        const [input, setInput] = useState("");
+        const inputRef = useRef<HTMLInputElement>(null);
+        const player = usePlayer();
+        const router = useRouter();
+        const [headline, setHeadline] = useState("");
+        const [affirmation, setAffirmation] = useState("");
+        const [focus, setFocus] = useState<string[]>([]);
+        const [progress, setProgress] = useState<Record<string, number>>({});
 
-	const vad = useMicVAD({
-		startOnLoad: true,
+        useEffect(() => {
+                const lang = localStorage.getItem("language");
+                const focusAreas = localStorage.getItem("focusAreas");
+                if (!lang || !focusAreas) {
+                        router.push("/onboarding");
+                        return;
+                }
+        }, [router]);
+
+        useEffect(() => {
+                const headlines = [
+                        "Welcome back!",
+                        "Ready to grow today?",
+                        "Your journey continues!",
+                ];
+                const affirmations = [
+                        "You are strong and capable.",
+                        "Every step is progress.",
+                        "Believe in yourself.",
+                ];
+                setHeadline(
+                        headlines[Math.floor(Math.random() * headlines.length)]
+                );
+                setAffirmation(
+                        affirmations[Math.floor(Math.random() * affirmations.length)]
+                );
+                const storedFocus = localStorage.getItem("focusAreas");
+                if (storedFocus) setFocus(JSON.parse(storedFocus));
+                const storedProgress = localStorage.getItem("progress");
+                if (storedProgress) setProgress(JSON.parse(storedProgress));
+        }, []);
+
+        const vad = useMicVAD({
+                startOnLoad: true,
 		onSpeechEnd: (audio) => {
 			player.stop();
 			const wav = utils.encodeWAV(audio);
@@ -49,10 +87,10 @@ export default function Home() {
 		return () => window.removeEventListener("keydown", keyDown);
 	});
 
-	const [messages, submit, isPending] = useActionState<
-		Array<Message>,
-		string | Blob
-	>(async (prevMessages, data) => {
+        const [messages, submit, isPending] = useActionState<
+                Array<Message>,
+                string | Blob
+        >(async (prevMessages, data) => {
 		const formData = new FormData();
 
 		if (typeof data === "string") {
@@ -89,17 +127,25 @@ export default function Home() {
 			return prevMessages;
 		}
 
-		const latency = Date.now() - submittedAt;
-		player.play(response.body, () => {
-			const isFirefox = navigator.userAgent.includes("Firefox");
-			if (isFirefox) vad.start();
-		});
-		setInput(transcript);
+                const latency = Date.now() - submittedAt;
+                player.play(response.body, () => {
+                        const isFirefox = navigator.userAgent.includes("Firefox");
+                        if (isFirefox) vad.start();
+                });
+                setInput(transcript);
 
-		return [
-			...prevMessages,
-			{
-				role: "user",
+                const stored = localStorage.getItem("progress");
+                const next: Record<string, number> = stored ? JSON.parse(stored) : {};
+                for (const area of focus) {
+                        next[area] = Math.min(100, (next[area] ?? 0) + 5);
+                }
+                localStorage.setItem("progress", JSON.stringify(next));
+                setProgress(next);
+
+                return [
+                        ...prevMessages,
+                        {
+                                role: "user",
 				content: transcript,
 			},
 			{
@@ -116,8 +162,30 @@ export default function Home() {
 	}
 
 	return (
-		<>
-			<div className="pb-4 min-h-28" />
+                <>
+                        <div className="pb-4 min-h-28" />
+                        <div className="space-y-2 text-center mb-6">
+                                <h1 className="text-2xl font-bold">{headline}</h1>
+                                <p className="text-sm">{affirmation}</p>
+                                {focus.length > 0 && (
+                                        <div className="space-y-2">
+                                                {focus.map((area) => (
+                                                        <div key={area}>
+                                                                <div className="flex justify-between text-sm">
+                                                                        <span>{area}</span>
+                                                                        <span>{progress[area] ?? 0}%</span>
+                                                                </div>
+                                                                <div className="h-2 bg-neutral-200 rounded">
+                                                                        <div
+                                                                                className="h-2 bg-blue-500 rounded"
+                                                                                style={{ width: `${progress[area] ?? 0}%` }}
+                                                                        />
+                                                                </div>
+                                                        </div>
+                                                ))}
+                                        </div>
+                                )}
+                        </div>
 
 			<form
 				className="rounded-full bg-neutral-200/80 dark:bg-neutral-800/80 flex items-center w-full max-w-3xl border border-transparent hover:border-neutral-300 focus-within:border-neutral-400 hover:focus-within:border-neutral-400 dark:hover:border-neutral-700 dark:focus-within:border-neutral-600 dark:hover:focus-within:border-neutral-600"
@@ -162,11 +230,17 @@ export default function Home() {
 							<A href="https://cartesia.ai">Cartesia</A>,{" "}
 							<A href="https://www.vad.ricky0123.com/">VAD</A>, and{" "}
 							<A href="https://vercel.com">Vercel</A>.{" "}
-							<A href="https://github.com/ai-ng/swift" target="_blank">
-								Learn more
-							</A>
-							.
-						</p>
+                                                        <A href="https://github.com/ai-ng/newomen" target="_blank">
+                                                                Learn more
+                                                        </A>
+                                                        .
+                                                </p>
+
+                                                <p>
+                                                        <A href="/admin">
+                                                                Admin Panel
+                                                        </A>
+                                                </p>
 
 						{vad.loading ? (
 							<p>Loading speech detection...</p>
