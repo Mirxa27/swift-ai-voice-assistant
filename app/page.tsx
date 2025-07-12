@@ -241,6 +241,11 @@ export default function Home() {
                                                                 Admin Panel
                                                         </A>
                                                 </p>
+                                                <p>
+                                                        <A href="/balance">
+                                                                Balance Wheel
+                                                        </A>
+                                                </p>
 
 						{vad.loading ? (
 							<p>Loading speech detection...</p>

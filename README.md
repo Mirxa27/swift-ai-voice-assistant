@@ -22,6 +22,7 @@ Thank you to the teams at Groq and Cartesia for providing access to their APIs f
 
 On first launch, visit `/onboarding` to choose your language and focus areas. These settings are saved in your browser for future visits.
 Progress for each focus area increases slightly with every conversation.
+Visit `/balance` to visualize your progress on the Balance Wheel.
 
 ## Documentation
 - [Product Requirements](docs/PRD.md)
