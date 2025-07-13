@@ -26,6 +26,7 @@ export default function Home() {
         const inputRef = useRef<HTMLInputElement>(null);
         const player = usePlayer();
         const router = useRouter();
+        const [language, setLanguage] = useState("English");
         const [headline, setHeadline] = useState("");
         const [affirmation, setAffirmation] = useState("");
         const [focus, setFocus] = useState<string[]>([]);
@@ -45,6 +46,7 @@ export default function Home() {
                         router.push("/onboarding");
                         return;
                 }
+                setLanguage(lang);
         }, [router]);
 
         useEffect(() => {
@@ -114,10 +116,11 @@ export default function Home() {
 
 		const submittedAt = Date.now();
 
-		const response = await fetch("/api", {
-			method: "POST",
-			body: formData,
-		});
+                const response = await fetch("/api", {
+                        method: "POST",
+                        body: formData,
+                        headers: { "X-Language": language },
+                });
 
 		const transcript = decodeURIComponent(
 			response.headers.get("X-Transcript") || ""

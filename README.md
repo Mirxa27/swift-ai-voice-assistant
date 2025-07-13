@@ -25,6 +25,7 @@ Progress for each focus area increases slightly with every conversation.
 Visit `/balance` to visualize your progress on the Balance Wheel.
 Visit `/journal` to review past conversations.
 Set `ADMIN_SECRET` in `.env.local` and visit `/admin` to manage prompts and AI provider settings.
+The selected language is sent to the server so responses use either Arabic or Saudi-style English.
 If a crisis is detected in conversation, the chat locks and a hotline for immediate help is displayed.
 Admin users can review and clear any crisis reports via the panel.
 Provider settings are stored in `providers.json` and can be edited from the admin panel.
