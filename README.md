@@ -23,7 +23,7 @@ Thank you to the teams at Groq and Cartesia for providing access to their APIs f
 
 ## Usage
 
-1. Open the app and complete the onboarding flow to choose your language and focus areas.
+1. Open the app and complete the onboarding flow to choose your language and focus areas. You must select at least one focus area before finishing.
 2. Ask questions by typing or speaking into your microphone.
 3. Listen to the spoken response and watch your progress bars update after each chat.
 4. Visit `/admin` to view your saved settings, progress, and API key status.

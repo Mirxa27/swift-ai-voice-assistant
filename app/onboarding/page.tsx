@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const areas = [
@@ -37,6 +38,10 @@ export default function Onboarding() {
       localStorage.setItem("language", language);
       setStep(2);
     } else {
+      if (focus.length === 0) {
+        toast.error("Please select at least one focus area.");
+        return;
+      }
       localStorage.setItem("focusAreas", JSON.stringify(focus));
       const progress: Record<string, number> = {};
       for (const area of focus) progress[area] = 0;

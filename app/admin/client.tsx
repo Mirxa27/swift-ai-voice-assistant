@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function AdminClient({
   groq,
@@ -52,6 +53,9 @@ export default function AdminClient({
           ))
         )}
       </div>
+      <p className="text-center pt-4">
+        <Link className="underline" href="/">Back to Home</Link>
+      </p>
     </div>
   );
 }
