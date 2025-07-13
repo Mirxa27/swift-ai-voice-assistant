@@ -6,7 +6,8 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+    "test": "vitest run"
 	},
 	"dependencies": {
 		"@ricky0123/vad-react": "^0.0.28",
@@ -32,6 +33,7 @@
 		"eslint-config-next": "15.3.0",
 		"postcss": "^8",
 		"tailwindcss": "^4.1.3",
-		"typescript": "^5"
+		"typescript": "^5",
+		"vitest": "^3.2.4"
 	}
 }

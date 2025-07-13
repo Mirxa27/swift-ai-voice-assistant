@@ -24,6 +24,7 @@ On first launch, visit `/onboarding` to choose your language and focus areas. Th
 Progress for each focus area increases slightly with every conversation.
 Visit `/balance` to visualize your progress on the Balance Wheel.
 Visit `/journal` to review past conversations.
+Set `ADMIN_SECRET` in `.env.local` and visit `/admin` to manage prompts.
 If a crisis is detected in conversation, the chat locks and a hotline for immediate help is displayed.
 
 ## Documentation

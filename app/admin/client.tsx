@@ -10,15 +10,77 @@ export default function AdminClient({
 }) {
   const [lang, setLang] = useState<string | null>(null);
   const [focus, setFocus] = useState<string[]>([]);
+  const [token, setToken] = useState<string | null>(null);
+  const [prompts, setPrompts] = useState<string>("{}");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLang(localStorage.getItem("language"));
     const stored = localStorage.getItem("focusAreas");
     if (stored) setFocus(JSON.parse(stored));
+    const saved = sessionStorage.getItem("adminToken");
+    if (saved) {
+      fetchPrompts(saved);
+    }
   }, []);
 
+  async function fetchPrompts(pass: string) {
+    setError(null);
+    const res = await fetch("/api/prompts", {
+      headers: { Authorization: `Bearer ${pass}` },
+    });
+    if (res.ok) {
+      setToken(pass);
+      sessionStorage.setItem("adminToken", pass);
+      setPrompts(JSON.stringify(await res.json(), null, 2));
+    } else {
+      setError("Invalid secret");
+    }
+  }
+
+  async function save() {
+    if (!token) return;
+    const res = await fetch("/api/prompts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: prompts,
+    });
+    if (!res.ok) setError("Failed to save prompts");
+  }
+
+  if (!token) {
+    return (
+      <div className="space-y-4 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-center">Admin Login</h1>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const pass = (form.elements.namedItem("secret") as HTMLInputElement)
+              .value;
+            fetchPrompts(pass);
+          }}
+          className="space-y-2"
+        >
+          <input
+            type="password"
+            name="secret"
+            placeholder="Admin secret"
+            className="w-full p-2 border rounded"
+            required
+          />
+          {error && <p className="text-red-600">{error}</p>}
+          <button className="w-full p-2 bg-black text-white rounded">Login</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 max-w-md mx-auto">
+    <div className="space-y-4 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-center">Admin Settings</h1>
       <div className="space-y-1">
         <p>GROQ_API_KEY configured: {groq ? "Yes" : "No"}</p>
@@ -27,6 +89,18 @@ export default function AdminClient({
       <div className="space-y-1">
         <p>Saved language: {lang || "None"}</p>
         <p>Focus areas: {focus.length > 0 ? focus.join(", ") : "None"}</p>
+      </div>
+      <div className="space-y-2">
+        <h2 className="font-semibold">Prompts JSON</h2>
+        <textarea
+          value={prompts}
+          onChange={(e) => setPrompts(e.target.value)}
+          className="w-full h-64 border p-2 font-mono"
+        />
+        {error && <p className="text-red-600">{error}</p>}
+        <button onClick={save} className="p-2 bg-black text-white rounded">
+          Save
+        </button>
       </div>
     </div>
   );
