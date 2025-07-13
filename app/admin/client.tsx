@@ -13,6 +13,7 @@ export default function AdminClient({
   const [token, setToken] = useState<string | null>(null);
   const [prompts, setPrompts] = useState<string>("{}");
   const [error, setError] = useState<string | null>(null);
+  const [reports, setReports] = useState<string[]>([]);
 
   useEffect(() => {
     setLang(localStorage.getItem("language"));
@@ -21,6 +22,7 @@ export default function AdminClient({
     const saved = sessionStorage.getItem("adminToken");
     if (saved) {
       fetchPrompts(saved);
+      fetchReports(saved);
     }
   }, []);
 
@@ -36,6 +38,22 @@ export default function AdminClient({
     } else {
       setError("Invalid secret");
     }
+  }
+
+  async function fetchReports(pass: string) {
+    const res = await fetch("/api/crisis", {
+      headers: { Authorization: `Bearer ${pass}` },
+    });
+    if (res.ok) setReports(await res.json());
+  }
+
+  async function clearReports() {
+    if (!token) return;
+    await fetch("/api/crisis", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setReports([]);
   }
 
   async function save() {
@@ -100,6 +118,25 @@ export default function AdminClient({
         {error && <p className="text-red-600">{error}</p>}
         <button onClick={save} className="p-2 bg-black text-white rounded">
           Save
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="font-semibold">Crisis Reports</h2>
+        {reports.length === 0 ? (
+          <p>No reports</p>
+        ) : (
+          <ul className="list-disc pl-4 space-y-1">
+            {reports.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+        )}
+        <button
+          onClick={clearReports}
+          className="p-2 bg-black text-white rounded"
+        >
+          Clear
         </button>
       </div>
     </div>

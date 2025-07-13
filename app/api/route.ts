@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { after } from "next/server";
+import { addReport } from "../../lib/crisis";
 
 let groq: Groq | null = null;
 function getGroq() {
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
         );
         if (crisisDetected) {
                 console.warn("Crisis detected in conversation");
+                await addReport(transcript);
                 response = crisisMessage;
         }
 	console.timeEnd(
