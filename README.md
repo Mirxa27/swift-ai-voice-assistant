@@ -24,9 +24,10 @@ On first launch, visit `/onboarding` to choose your language and focus areas. Th
 Progress for each focus area increases slightly with every conversation.
 Visit `/balance` to visualize your progress on the Balance Wheel.
 Visit `/journal` to review past conversations.
-Set `ADMIN_SECRET` in `.env.local` and visit `/admin` to manage prompts.
+Set `ADMIN_SECRET` in `.env.local` and visit `/admin` to manage prompts and AI provider settings.
 If a crisis is detected in conversation, the chat locks and a hotline for immediate help is displayed.
 Admin users can review and clear any crisis reports via the panel.
+Provider settings are stored in `providers.json` and can be edited from the admin panel.
 
 ## Documentation
 - [Product Requirements](docs/PRD.md)

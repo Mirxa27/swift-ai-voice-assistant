@@ -12,6 +12,7 @@ export default function AdminClient({
   const [focus, setFocus] = useState<string[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [prompts, setPrompts] = useState<string>("{}");
+  const [providers, setProviders] = useState<string>("{}");
   const [error, setError] = useState<string | null>(null);
   const [reports, setReports] = useState<string[]>([]);
 
@@ -22,6 +23,7 @@ export default function AdminClient({
     const saved = sessionStorage.getItem("adminToken");
     if (saved) {
       fetchPrompts(saved);
+      fetchProviders(saved);
       fetchReports(saved);
     }
   }, []);
@@ -38,6 +40,13 @@ export default function AdminClient({
     } else {
       setError("Invalid secret");
     }
+  }
+
+  async function fetchProviders(pass: string) {
+    const res = await fetch("/api/providers", {
+      headers: { Authorization: `Bearer ${pass}` },
+    });
+    if (res.ok) setProviders(JSON.stringify(await res.json(), null, 2));
   }
 
   async function fetchReports(pass: string) {
@@ -67,6 +76,15 @@ export default function AdminClient({
       body: prompts,
     });
     if (!res.ok) setError("Failed to save prompts");
+    const res2 = await fetch("/api/providers", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: providers,
+    });
+    if (!res2.ok) setError("Failed to save providers");
   }
 
   if (!token) {
@@ -80,6 +98,8 @@ export default function AdminClient({
             const pass = (form.elements.namedItem("secret") as HTMLInputElement)
               .value;
             fetchPrompts(pass);
+            fetchProviders(pass);
+            fetchReports(pass);
           }}
           className="space-y-2"
         >
@@ -119,6 +139,15 @@ export default function AdminClient({
         <button onClick={save} className="p-2 bg-black text-white rounded">
           Save
         </button>
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="font-semibold">Provider Config JSON</h2>
+        <textarea
+          value={providers}
+          onChange={(e) => setProviders(e.target.value)}
+          className="w-full h-40 border p-2 font-mono"
+        />
       </div>
 
       <div className="space-y-2">
