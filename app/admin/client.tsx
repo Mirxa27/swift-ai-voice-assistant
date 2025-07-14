@@ -12,7 +12,9 @@ export default function AdminClient({
   const [focus, setFocus] = useState<string[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [prompts, setPrompts] = useState<string>("{}");
+  const [promptCount, setPromptCount] = useState(0);
   const [providers, setProviders] = useState<string>("{}");
+  const [providerCount, setProviderCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [reports, setReports] = useState<string[]>([]);
 
@@ -36,7 +38,12 @@ export default function AdminClient({
     if (res.ok) {
       setToken(pass);
       sessionStorage.setItem("adminToken", pass);
-      setPrompts(JSON.stringify(await res.json(), null, 2));
+      const data = await res.json();
+      setPrompts(JSON.stringify(data, null, 2));
+      const questions = Array.isArray(data.shadowSelf?.questions)
+        ? data.shadowSelf.questions.length
+        : 0;
+      setPromptCount(questions);
     } else {
       setError("Invalid secret");
     }
@@ -46,7 +53,11 @@ export default function AdminClient({
     const res = await fetch("/api/providers", {
       headers: { Authorization: `Bearer ${pass}` },
     });
-    if (res.ok) setProviders(JSON.stringify(await res.json(), null, 2));
+    if (res.ok) {
+      const data = await res.json();
+      setProviders(JSON.stringify(data, null, 2));
+      setProviderCount(Object.keys(data).length);
+    }
   }
 
   async function fetchReports(pass: string) {
@@ -129,7 +140,7 @@ export default function AdminClient({
         <p>Focus areas: {focus.length > 0 ? focus.join(", ") : "None"}</p>
       </div>
       <div className="space-y-2">
-        <h2 className="font-semibold">Prompts JSON</h2>
+        <h2 className="font-semibold">Prompts ({promptCount})</h2>
         <textarea
           value={prompts}
           onChange={(e) => setPrompts(e.target.value)}
@@ -142,7 +153,7 @@ export default function AdminClient({
       </div>
 
       <div className="space-y-2">
-        <h2 className="font-semibold">Provider Config JSON</h2>
+        <h2 className="font-semibold">Providers ({providerCount})</h2>
         <textarea
           value={providers}
           onChange={(e) => setProviders(e.target.value)}
@@ -151,7 +162,7 @@ export default function AdminClient({
       </div>
 
       <div className="space-y-2">
-        <h2 className="font-semibold">Crisis Reports</h2>
+        <h2 className="font-semibold">Crisis Reports ({reports.length})</h2>
         {reports.length === 0 ? (
           <p>No reports</p>
         ) : (
