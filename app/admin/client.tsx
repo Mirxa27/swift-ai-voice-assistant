@@ -17,16 +17,19 @@ export default function AdminClient({
   const [providerCount, setProviderCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [reports, setReports] = useState<string[]>([]);
+  const [progress, setProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setLang(localStorage.getItem("language"));
-    const stored = localStorage.getItem("focusAreas");
-    if (stored) setFocus(JSON.parse(stored));
-    const saved = sessionStorage.getItem("adminToken");
-    if (saved) {
-      fetchPrompts(saved);
-      fetchProviders(saved);
-      fetchReports(saved);
+    const storedFocus = localStorage.getItem("focusAreas");
+    if (storedFocus) setFocus(JSON.parse(storedFocus));
+    const storedProg = localStorage.getItem("progress");
+    if (storedProg) setProgress(JSON.parse(storedProg));
+    const savedToken = sessionStorage.getItem("adminToken");
+    if (savedToken) {
+      fetchPrompts(savedToken);
+      fetchProviders(savedToken);
+      fetchReports(savedToken);
     }
   }, []);
 
@@ -78,7 +81,8 @@ export default function AdminClient({
 
   async function save() {
     if (!token) return;
-    const res = await fetch("/api/prompts", {
+    setError(null);
+    const resPrompts = await fetch("/api/prompts", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -86,8 +90,12 @@ export default function AdminClient({
       },
       body: prompts,
     });
-    if (!res.ok) setError("Failed to save prompts");
-    const res2 = await fetch("/api/providers", {
+    if (!resPrompts.ok) {
+      setError("Failed to save prompts");
+      return;
+    }
+
+    const resProviders = await fetch("/api/providers", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -95,7 +103,9 @@ export default function AdminClient({
       },
       body: providers,
     });
-    if (!res2.ok) setError("Failed to save providers");
+    if (!resProviders.ok) {
+      setError("Failed to save providers");
+    }
   }
 
   if (!token) {
@@ -122,51 +132,82 @@ export default function AdminClient({
             required
           />
           {error && <p className="text-red-600">{error}</p>}
-          <button className="w-full p-2 bg-black text-white rounded">Login</button>
+          <button className="w-full p-2 bg-black text-white rounded">
+            Login
+          </button>
         </form>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto">
+    <div className="space-y-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-center">Admin Settings</h1>
-      <div className="space-y-1">
+
+      <div className="space-y-2 p-4 border rounded">
+        <h2 className="font-semibold text-lg">API Status</h2>
         <p>GROQ_API_KEY configured: {groq ? "Yes" : "No"}</p>
         <p>CARTESIA_API_KEY configured: {cartesia ? "Yes" : "No"}</p>
       </div>
-      <div className="space-y-1">
+
+      <div className="space-y-2 p-4 border rounded">
+        <h2 className="font-semibold text-lg">User Settings</h2>
         <p>Saved language: {lang || "None"}</p>
         <p>Focus areas: {focus.length > 0 ? focus.join(", ") : "None"}</p>
       </div>
-      <div className="space-y-2">
-        <h2 className="font-semibold">Prompts ({promptCount})</h2>
-        <textarea
-          value={prompts}
-          onChange={(e) => setPrompts(e.target.value)}
-          className="w-full h-64 border p-2 font-mono"
-        />
+
+      <div className="space-y-2 p-4 border rounded">
+        <h2 className="font-semibold text-lg">Progress</h2>
+        {Object.keys(progress).length === 0 ? (
+          <p>No progress yet.</p>
+        ) : (
+          focus.map((area) => (
+            <div key={area}>
+              <div className="flex justify-between text-sm">
+                <span>{area}</span>
+                <span>{progress[area] ?? 0}%</span>
+              </div>
+              <div className="h-2 bg-neutral-200 rounded">
+                <div
+                  className="h-2 bg-blue-500 rounded"
+                  style={{ width: `${progress[area] ?? 0}%` }}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="space-y-4 p-4 border rounded">
+        <div className="space-y-2">
+          <h2 className="font-semibold text-lg">Prompts ({promptCount})</h2>
+          <textarea
+            value={prompts}
+            onChange={(e) => setPrompts(e.target.value)}
+            className="w-full h-64 border p-2 font-mono text-sm"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="font-semibold text-lg">Providers ({providerCount})</h2>
+          <textarea
+            value={providers}
+            onChange={(e) => setProviders(e.target.value)}
+            className="w-full h-40 border p-2 font-mono text-sm"
+          />
+        </div>
         {error && <p className="text-red-600">{error}</p>}
-        <button onClick={save} className="p-2 bg-black text-white rounded">
-          Save
+        <button onClick={save} className="w-full p-2 bg-black text-white rounded">
+          Save Prompts & Providers
         </button>
       </div>
 
-      <div className="space-y-2">
-        <h2 className="font-semibold">Providers ({providerCount})</h2>
-        <textarea
-          value={providers}
-          onChange={(e) => setProviders(e.target.value)}
-          className="w-full h-40 border p-2 font-mono"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <h2 className="font-semibold">Crisis Reports ({reports.length})</h2>
+      <div className="space-y-2 p-4 border rounded">
+        <h2 className="font-semibold text-lg">Crisis Reports ({reports.length})</h2>
         {reports.length === 0 ? (
           <p>No reports</p>
         ) : (
-          <ul className="list-disc pl-4 space-y-1">
+          <ul className="list-disc pl-5 space-y-1">
             {reports.map((r, i) => (
               <li key={i}>{r}</li>
             ))}
@@ -174,9 +215,10 @@ export default function AdminClient({
         )}
         <button
           onClick={clearReports}
-          className="p-2 bg-black text-white rounded"
+          disabled={reports.length === 0}
+          className="w-full p-2 bg-red-600 text-white rounded disabled:bg-neutral-400"
         >
-          Clear
+          Clear Reports
         </button>
       </div>
     </div>
