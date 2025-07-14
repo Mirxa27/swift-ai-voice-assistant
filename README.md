@@ -24,6 +24,7 @@ On first launch, visit `/onboarding` to choose your language and focus areas. Th
 Progress for each focus area increases slightly with every conversation.
 Visit `/balance` to visualize your progress on the Balance Wheel.
 Visit `/journal` to review past conversations.
+Use the **Clear Journal** button on that page to remove stored chats.
 Set `ADMIN_SECRET` in `.env.local` and visit `/admin` to manage prompts and AI provider settings.
 The selected language is sent to the server so responses use either Arabic or Saudi-style English.
 If a crisis is detected in conversation, the chat locks and a hotline for immediate help is displayed.

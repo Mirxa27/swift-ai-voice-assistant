@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { readJournal, clearJournal } from "@/lib/journal";
 
 type Message = {
   role: "user" | "assistant";
@@ -11,8 +12,7 @@ export default function JournalPage() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("journal");
-    if (stored) setMessages(JSON.parse(stored));
+    setMessages(readJournal());
   }, []);
 
   if (messages.length === 0) {
@@ -27,6 +27,15 @@ export default function JournalPage() {
   return (
     <div className="p-4 space-y-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold text-center">Journal</h1>
+      <button
+        onClick={() => {
+          clearJournal();
+          setMessages([]);
+        }}
+        className="px-3 py-1 bg-red-600 text-white rounded"
+      >
+        Clear Journal
+      </button>
       <div className="space-y-2">
         {messages.map((m, i) => (
           <div key={i} className="border rounded p-2">

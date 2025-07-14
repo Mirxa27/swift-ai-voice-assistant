@@ -14,6 +14,7 @@ import { usePlayer } from "@/lib/usePlayer";
 import { track } from "@vercel/analytics";
 import { useMicVAD, utils } from "@ricky0123/vad-react";
 import { useRouter } from "next/navigation";
+import { readJournal, writeJournal } from "@/lib/journal";
 
 type Message = {
 	role: "user" | "assistant";
@@ -33,11 +34,7 @@ export default function Home() {
         const [progress, setProgress] = useState<Record<string, number>>({});
         const [crisis, setCrisis] = useState(false);
 
-        const initialMessages: Array<Message> = (() => {
-                if (typeof localStorage === "undefined") return [];
-                const stored = localStorage.getItem("journal");
-                return stored ? JSON.parse(stored) : [];
-        })();
+        const initialMessages: Array<Message> = readJournal();
 
         useEffect(() => {
                 const lang = localStorage.getItem("language");
@@ -169,7 +166,7 @@ export default function Home() {
         }, initialMessages);
 
         useEffect(() => {
-                localStorage.setItem("journal", JSON.stringify(messages));
+                writeJournal(messages);
         }, [messages]);
 
         function handleFormSubmit(e: React.FormEvent) {
