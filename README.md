@@ -22,6 +22,14 @@ Thank you to the teams at Groq and Cartesia for providing access to their APIs f
 
 On first launch, visit `/onboarding` to choose your language and focus areas. These settings are saved in your browser for future visits.
 Progress for each focus area increases slightly with every conversation.
+Visit `/balance` to visualize your progress on the Balance Wheel.
+Visit `/journal` to review past conversations.
+Use the **Clear Journal** button on that page to remove stored chats.
+Set `ADMIN_SECRET` and `ADMIN_OTP_SECRET` in `.env.local` and visit `/admin` to manage prompts and AI provider settings. Log in with `ADMIN_SECRET` followed by a TOTP code generated from `ADMIN_OTP_SECRET` (e.g. `Bearer SECRET:123456`). The dashboard shows prompt, provider, and crisis report counts.
+The selected language is sent to the server so responses use either Arabic or Saudi-style English.
+If a crisis is detected in conversation, the chat locks and a hotline for immediate help is displayed.
+Admin users can review and clear any crisis reports via the panel.
+Provider settings are stored in `providers.json` and can be edited from the admin panel.
 
 ## Documentation
 - [Product Requirements](docs/PRD.md)

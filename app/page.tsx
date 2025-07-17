@@ -2,11 +2,11 @@
 
 import clsx from "clsx";
 import {
-	useActionState,
-	useEffect,
-	useRef,
-	useState,
-	startTransition,
+        useActionState,
+        useEffect,
+        useRef,
+        useState,
+        startTransition,
 } from "react";
 import { toast } from "sonner";
 import { EnterIcon, LoadingIcon } from "@/lib/icons";
@@ -14,6 +14,7 @@ import { usePlayer } from "@/lib/usePlayer";
 import { track } from "@vercel/analytics";
 import { useMicVAD, utils } from "@ricky0123/vad-react";
 import { useRouter } from "next/navigation";
+import { readJournal, writeJournal } from "@/lib/journal";
 
 type Message = {
 	role: "user" | "assistant";
@@ -26,10 +27,14 @@ export default function Home() {
         const inputRef = useRef<HTMLInputElement>(null);
         const player = usePlayer();
         const router = useRouter();
+        const [language, setLanguage] = useState("English");
         const [headline, setHeadline] = useState("");
         const [affirmation, setAffirmation] = useState("");
         const [focus, setFocus] = useState<string[]>([]);
         const [progress, setProgress] = useState<Record<string, number>>({});
+        const [crisis, setCrisis] = useState(false);
+
+        const initialMessages: Array<Message> = readJournal();
 
         useEffect(() => {
                 const lang = localStorage.getItem("language");
@@ -38,6 +43,7 @@ export default function Home() {
                         router.push("/onboarding");
                         return;
                 }
+                setLanguage(lang);
         }, [router]);
 
         useEffect(() => {
@@ -107,31 +113,34 @@ export default function Home() {
 
 		const submittedAt = Date.now();
 
-		const response = await fetch("/api", {
-			method: "POST",
-			body: formData,
-		});
+                const response = await fetch("/api", {
+                        method: "POST",
+                        body: formData,
+                        headers: { "X-Language": language },
+                });
 
 		const transcript = decodeURIComponent(
 			response.headers.get("X-Transcript") || ""
 		);
-		const text = decodeURIComponent(response.headers.get("X-Response") || "");
+                const text = decodeURIComponent(response.headers.get("X-Response") || "");
+                const crisisHeader = response.headers.get("X-Crisis") === "1";
 
-		if (!response.ok || !transcript || !text || !response.body) {
-			if (response.status === 429) {
-				toast.error("Too many requests. Please try again later.");
-			} else {
-				toast.error((await response.text()) || "An error occurred.");
-			}
+                if (!response.ok || !transcript || !text || !response.body) {
+                        if (response.status === 429) {
+                                toast.error("Too many requests. Please try again later.");
+                        } else {
+                                toast.error((await response.text()) || "An error occurred.");
+                        }
 
-			return prevMessages;
-		}
+                        return prevMessages;
+                }
 
                 const latency = Date.now() - submittedAt;
                 player.play(response.body, () => {
                         const isFirefox = navigator.userAgent.includes("Firefox");
                         if (isFirefox) vad.start();
                 });
+                if (crisisHeader) setCrisis(true);
                 setInput(transcript);
 
                 const stored = localStorage.getItem("progress");
@@ -154,15 +163,29 @@ export default function Home() {
 				latency,
 			},
 		];
-	}, []);
+        }, initialMessages);
 
-	function handleFormSubmit(e: React.FormEvent) {
-		e.preventDefault();
-		startTransition(() => submit(input));
-	}
+        useEffect(() => {
+                writeJournal(messages);
+        }, [messages]);
 
-	return (
+        function handleFormSubmit(e: React.FormEvent) {
+                e.preventDefault();
+                if (!crisis) startTransition(() => submit(input));
+        }
+
+        return (
                 <>
+                        {crisis && (
+                                <div className="p-4 mb-4 bg-red-100 border border-red-300 rounded text-red-800 max-w-xl text-center space-y-2">
+                                        <p>
+                                                It sounds like you are going through a very difficult time. For immediate help, please contact the Saudi crisis hotline at <a href="tel:937" className="underline">937</a> or your local emergency services.
+                                        </p>
+                                        <button onClick={() => setCrisis(false)} className="px-4 py-2 bg-red-600 text-white rounded">
+                                                Dismiss
+                                        </button>
+                                </div>
+                        )}
                         <div className="pb-4 min-h-28" />
                         <div className="space-y-2 text-center mb-6">
                                 <h1 className="text-2xl font-bold">{headline}</h1>
@@ -191,20 +214,21 @@ export default function Home() {
 				className="rounded-full bg-neutral-200/80 dark:bg-neutral-800/80 flex items-center w-full max-w-3xl border border-transparent hover:border-neutral-300 focus-within:border-neutral-400 hover:focus-within:border-neutral-400 dark:hover:border-neutral-700 dark:focus-within:border-neutral-600 dark:hover:focus-within:border-neutral-600"
 				onSubmit={handleFormSubmit}
 			>
-				<input
-					type="text"
-					className="bg-transparent focus:outline-hidden p-4 w-full placeholder:text-neutral-600 dark:placeholder:text-neutral-400"
-					required
-					placeholder="Ask me anything"
-					value={input}
-					onChange={(e) => setInput(e.target.value)}
-					ref={inputRef}
-				/>
+                                <input
+                                        type="text"
+                                        className="bg-transparent focus:outline-hidden p-4 w-full placeholder:text-neutral-600 dark:placeholder:text-neutral-400"
+                                        required
+                                        placeholder="Ask me anything"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        ref={inputRef}
+                                        disabled={crisis}
+                                />
 
 				<button
 					type="submit"
 					className="p-4 text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white"
-					disabled={isPending}
+                                        disabled={isPending || crisis}
 					aria-label="Submit"
 				>
 					{isPending ? <LoadingIcon /> : <EnterIcon />}
@@ -239,6 +263,16 @@ export default function Home() {
                                                 <p>
                                                         <A href="/admin">
                                                                 Admin Panel
+                                                        </A>
+                                                </p>
+                                                <p>
+                                                        <A href="/balance">
+                                                                Balance Wheel
+                                                        </A>
+                                                </p>
+                                                <p>
+                                                        <A href="/journal">
+                                                                Journal
                                                         </A>
                                                 </p>
 

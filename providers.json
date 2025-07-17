@@ -1,0 +1,10 @@
+{
+  "groq": {
+    "model": "llama3-8b-8192",
+    "label": "Groq Llama 3"
+  },
+  "cartesia": {
+    "model": "sonic-english",
+    "label": "Cartesia Sonic"
+  }
+}
