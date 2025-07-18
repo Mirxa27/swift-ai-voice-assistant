@@ -113,11 +113,23 @@ export default function Home() {
 
 		const submittedAt = Date.now();
 
+
                 const response = await fetch("/api", {
                         method: "POST",
                         body: formData,
                         headers: { "X-Language": language },
                 });
+
+                let response: Response;
+                try {
+                        response = await fetch("/api", {
+                                method: "POST",
+                                body: formData,
+                        });
+                } catch {
+                        toast.error("Network error. Please try again.");
+                        return prevMessages;
+                }
 
 		const transcript = decodeURIComponent(
 			response.headers.get("X-Transcript") || ""
@@ -190,7 +202,7 @@ export default function Home() {
                         <div className="space-y-2 text-center mb-6">
                                 <h1 className="text-2xl font-bold">{headline}</h1>
                                 <p className="text-sm">{affirmation}</p>
-                                {focus.length > 0 && (
+                                {focus.length > 0 ? (
                                         <div className="space-y-2">
                                                 {focus.map((area) => (
                                                         <div key={area}>
@@ -207,6 +219,12 @@ export default function Home() {
                                                         </div>
                                                 ))}
                                         </div>
+                                ) : (
+                                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                No focus areas selected. Visit&nbsp;
+                                                <A href="/onboarding">onboarding</A>
+                                                &nbsp;to choose some.
+                                        </p>
                                 )}
                         </div>
 

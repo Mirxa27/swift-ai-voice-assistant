@@ -14,11 +14,13 @@ Thank you to the teams at Groq and Cartesia for providing access to their APIs f
 ## Developing
 
 -   Clone the repository
--   Copy `.env.example` to `.env.local` and fill in the environment variables.
+-   Copy `.env.example` to `.env.local`.
+-   Set `GROQ_API_KEY` and `CARTESIA_API_KEY` in `.env.local` so the assistant can transcribe and speak.
 -   Run `pnpm install` to install dependencies.
 -   Run `pnpm dev` to start the development server.
 -   Run `pnpm lint` to check code style.
 -   Run `pnpm build` to generate a production build.
+
 
 On first launch, visit `/onboarding` to choose your language and focus areas. These settings are saved in your browser for future visits.
 Progress for each focus area increases slightly with every conversation.
@@ -31,6 +33,15 @@ If a crisis is detected in conversation, the chat locks and a hotline for immedi
 Admin users can review and clear any crisis reports via the panel.
 Provider settings are stored in `providers.json` and can be edited from the admin panel.
 Run `pnpm backup` to save a timestamped copy of `providers.json`, `prompts.json`, and `crisis.json` in the `backup` folder.
+
+## Usage
+
+1. Open the app and complete the onboarding flow to choose your language and focus areas.
+2. Ask questions by typing or speaking into your microphone.
+3. Listen to the spoken response and watch your progress bars update after each chat.
+4. Visit `/admin` to view your saved settings, progress, and API key status.
+
+
 
 ## Documentation
 - [Product Requirements](docs/PRD.md)
