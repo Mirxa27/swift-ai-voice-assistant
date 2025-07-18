@@ -9,6 +9,7 @@ export const metadata: Metadata = {
         title: "Newomen",
         description:
                 "Newomen is a fast, open-source voice assistant for personal growth.",
+       metadataBase: new URL('https://newomen.vercel.app'),
 };
 
 const geist = Geist({
