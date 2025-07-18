@@ -30,6 +30,7 @@ The selected language is sent to the server so responses use either Arabic or Sa
 If a crisis is detected in conversation, the chat locks and a hotline for immediate help is displayed.
 Admin users can review and clear any crisis reports via the panel.
 Provider settings are stored in `providers.json` and can be edited from the admin panel.
+Run `pnpm backup` to save a timestamped copy of `providers.json`, `prompts.json`, and `crisis.json` in the `backup` folder.
 
 ## Documentation
 - [Product Requirements](docs/PRD.md)

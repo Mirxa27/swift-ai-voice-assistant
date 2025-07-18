@@ -7,8 +7,9 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"test": "vitest run"
-	},
+    "test": "vitest run",
+    "backup": "node scripts/backup.js"
+  },
 	"dependencies": {
 		"@ricky0123/vad-react": "^0.0.28",
 		"@ricky0123/vad-web": "^0.0.22",
