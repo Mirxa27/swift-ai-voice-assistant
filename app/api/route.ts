@@ -4,6 +4,50 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { after } from "next/server";
 
+const CRISIS_MESSAGE =
+  "I'm concerned about your safety. Please contact your local crisis hotline or dial 988 if you are in the US.";
+
+function containsCrisis(text: string) {
+  const lower = text.toLowerCase();
+  return [
+    "suicide",
+    "kill myself",
+    "kill yourself",
+    "harm myself",
+    "hurt myself",
+    "end my life",
+    "self harm",
+  ].some((kw) => lower.includes(kw));
+}
+
+async function synthesize(text: string) {
+  const voice = await fetch("https://api.cartesia.ai/tts/bytes", {
+    method: "POST",
+    headers: {
+      "Cartesia-Version": "2024-06-30",
+      "Content-Type": "application/json",
+      "X-API-Key": process.env.CARTESIA_API_KEY!,
+    },
+    body: JSON.stringify({
+      model_id: "sonic-english",
+      transcript: text,
+      voice: { mode: "id", id: "79a125e8-cd45-4c13-8a67-188112f4dd22" },
+      output_format: {
+        container: "raw",
+        encoding: "pcm_f32le",
+        sample_rate: 24000,
+      },
+    }),
+  });
+
+  if (!voice.ok) {
+    console.error(await voice.text());
+    throw new Error("Voice synthesis failed");
+  }
+
+  return voice;
+}
+
 let groq: Groq | null = null;
 function getGroq() {
   if (groq) return groq;
@@ -34,8 +78,18 @@ export async function POST(request: Request) {
 	const { data, success } = schema.safeParse(await request.formData());
 	if (!success) return new Response("Invalid request", { status: 400 });
 
-	const transcript = await getTranscript(data.input);
-	if (!transcript) return new Response("Invalid audio", { status: 400 });
+        const transcript = await getTranscript(data.input);
+        if (!transcript) return new Response("Invalid audio", { status: 400 });
+
+        if (containsCrisis(transcript)) {
+                const voice = await synthesize(CRISIS_MESSAGE);
+                return new Response(voice.body, {
+                        headers: {
+                                "X-Transcript": encodeURIComponent(transcript),
+                                "X-Response": encodeURIComponent(CRISIS_MESSAGE),
+                        },
+                });
+        }
 
 	console.timeEnd(
 		"transcribe " + request.headers.get("x-vercel-id") || "local"
@@ -73,59 +127,41 @@ export async function POST(request: Request) {
 		],
 	});
 
-	const response = completion.choices[0].message.content;
-	console.timeEnd(
-		"text completion " + request.headers.get("x-vercel-id") || "local"
-	);
+        const response = completion.choices[0].message.content;
+        console.timeEnd(
+                "text completion " + request.headers.get("x-vercel-id") || "local"
+        );
 
-	if (!response) return new Response("Invalid response", { status: 500 });
+        if (!response) return new Response("Invalid response", { status: 500 });
 
-	console.time(
-		"cartesia request " + request.headers.get("x-vercel-id") || "local"
-	);
+        const finalText = containsCrisis(response) ? CRISIS_MESSAGE : response;
 
-	const voice = await fetch("https://api.cartesia.ai/tts/bytes", {
-		method: "POST",
-		headers: {
-			"Cartesia-Version": "2024-06-30",
-			"Content-Type": "application/json",
-			"X-API-Key": process.env.CARTESIA_API_KEY!,
-		},
-		body: JSON.stringify({
-			model_id: "sonic-english",
-			transcript: response,
-			voice: {
-				mode: "id",
-				id: "79a125e8-cd45-4c13-8a67-188112f4dd22",
-			},
-			output_format: {
-				container: "raw",
-				encoding: "pcm_f32le",
-				sample_rate: 24000,
-			},
-		}),
-	});
+        console.time(
+                "cartesia request " + request.headers.get("x-vercel-id") || "local"
+        );
 
-	console.timeEnd(
-		"cartesia request " + request.headers.get("x-vercel-id") || "local"
-	);
+        let voice: Response;
+        try {
+                voice = await synthesize(finalText);
+        } catch {
+                return new Response("Voice synthesis failed", { status: 500 });
+        }
 
-	if (!voice.ok) {
-		console.error(await voice.text());
-		return new Response("Voice synthesis failed", { status: 500 });
-	}
+        console.timeEnd(
+                "cartesia request " + request.headers.get("x-vercel-id") || "local"
+        );
 
 	console.time("stream " + request.headers.get("x-vercel-id") || "local");
 	after(() => {
 		console.timeEnd("stream " + request.headers.get("x-vercel-id") || "local");
 	});
 
-	return new Response(voice.body, {
-		headers: {
-			"X-Transcript": encodeURIComponent(transcript),
-			"X-Response": encodeURIComponent(response),
-		},
-	});
+        return new Response(voice.body, {
+                headers: {
+                        "X-Transcript": encodeURIComponent(transcript),
+                        "X-Response": encodeURIComponent(finalText),
+                },
+        });
 }
 
 async function location() {
