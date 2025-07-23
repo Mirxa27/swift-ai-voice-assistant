@@ -4,13 +4,18 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { after } from "next/server";
 
+// Short message returned when the assistant detects a user may be in crisis.
+// The content matches the policy defined in docs/SOP-User-Safety.md
 const CRISIS_MESSAGE =
   "I'm concerned about your safety. Please contact your local crisis hotline or dial 988 if you are in the US.";
 
+// Basic keyword matcher used to guard against self harm queries.
+// This is intentionally simple to keep the runtime fast.
 function containsCrisis(text: string) {
   const lower = text.toLowerCase();
   return [
     "suicide",
+    "suicidal",
     "kill myself",
     "kill yourself",
     "harm myself",
@@ -20,7 +25,7 @@ function containsCrisis(text: string) {
   ].some((kw) => lower.includes(kw));
 }
 
-async function synthesize(text: string) {
+async function synthesizeVoice(text: string) {
   const voice = await fetch("https://api.cartesia.ai/tts/bytes", {
     method: "POST",
     headers: {
@@ -82,7 +87,7 @@ export async function POST(request: Request) {
         if (!transcript) return new Response("Invalid audio", { status: 400 });
 
         if (containsCrisis(transcript)) {
-                const voice = await synthesize(CRISIS_MESSAGE);
+                const voice = await synthesizeVoice(CRISIS_MESSAGE);
                 return new Response(voice.body, {
                         headers: {
                                 "X-Transcript": encodeURIComponent(transcript),
@@ -142,7 +147,7 @@ export async function POST(request: Request) {
 
         let voice: Response;
         try {
-                voice = await synthesize(finalText);
+                voice = await synthesizeVoice(finalText);
         } catch {
                 return new Response("Voice synthesis failed", { status: 500 });
         }
