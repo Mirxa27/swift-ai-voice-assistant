@@ -30,6 +30,7 @@ export default function Home() {
         const [affirmation, setAffirmation] = useState("");
         const [focus, setFocus] = useState<string[]>([]);
         const [progress, setProgress] = useState<Record<string, number>>({});
+        const [streak, setStreak] = useState(0);
 
         useEffect(() => {
                 const lang = localStorage.getItem("language");
@@ -61,6 +62,25 @@ export default function Home() {
                 if (storedFocus) setFocus(JSON.parse(storedFocus));
                 const storedProgress = localStorage.getItem("progress");
                 if (storedProgress) setProgress(JSON.parse(storedProgress));
+        }, []);
+
+        useEffect(() => {
+                const today = new Date().toDateString();
+                const last = localStorage.getItem("lastVisit");
+                const stored = parseInt(localStorage.getItem("streak") || "0", 10);
+
+                if (last === today) {
+                        setStreak(stored);
+                        return;
+                }
+
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const newStreak = last === yesterday.toDateString() ? stored + 1 : 1;
+                localStorage.setItem("streak", String(newStreak));
+                localStorage.setItem("lastVisit", today);
+                setStreak(newStreak);
         }, []);
 
         const vad = useMicVAD({
@@ -173,6 +193,9 @@ export default function Home() {
                         <div className="space-y-2 text-center mb-6">
                                 <h1 className="text-2xl font-bold">{headline}</h1>
                                 <p className="text-sm">{affirmation}</p>
+                                <p className="text-sm text-blue-600">
+                                        Daily streak: {streak} day{streak === 1 ? "" : "s"}
+                                </p>
                                 {focus.length > 0 ? (
                                         <div className="space-y-2">
                                                 {focus.map((area) => (

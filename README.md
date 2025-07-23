@@ -26,7 +26,8 @@ Thank you to the teams at Groq and Cartesia for providing access to their APIs f
 1. Open the app and complete the onboarding flow to choose your language and focus areas.
 2. Ask questions by typing or speaking into your microphone.
 3. Listen to the spoken response and watch your progress bars update after each chat.
-4. Visit `/admin` to view your saved settings, progress, and API key status.
+4. Check the "Daily streak" counter on the home page to stay motivated.
+5. Visit `/admin` to view your saved settings, progress, and API key status.
 
 
 ## Documentation
