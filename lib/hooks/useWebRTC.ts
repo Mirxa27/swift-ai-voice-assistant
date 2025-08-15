@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { io, Socket } from 'socket.io-client'
+const io = require('socket.io-client').default || require('socket.io-client')
+type Socket = any
 
 interface UseWebRTCOptions {
   roomId: string
@@ -49,7 +50,7 @@ export function useWebRTC({
       setIsConnected(false)
     })
 
-    socket.on('user-joined', async ({ userId: newUserId, socketId }) => {
+    socket.on('user-joined', async ({ userId: newUserId, socketId }: any) => {
       console.log(`User ${newUserId} joined`)
       setParticipants(prev => [...prev, newUserId])
       onUserJoined?.(newUserId)
@@ -62,7 +63,7 @@ export function useWebRTC({
       socket.emit('offer', { to: socketId, offer })
     })
 
-    socket.on('user-left', ({ userId: leftUserId, socketId }) => {
+    socket.on('user-left', ({ userId: leftUserId, socketId }: any) => {
       console.log(`User ${leftUserId} left`)
       setParticipants(prev => prev.filter(id => id !== leftUserId))
       onUserLeft?.(leftUserId)
@@ -75,7 +76,7 @@ export function useWebRTC({
       }
     })
 
-    socket.on('offer', async ({ from, offer }) => {
+    socket.on('offer', async ({ from, offer }: any) => {
       const pc = createPeerConnection(from)
       await pc.setRemoteDescription(offer)
       const answer = await pc.createAnswer()
@@ -84,21 +85,21 @@ export function useWebRTC({
       socket.emit('answer', { to: from, answer })
     })
 
-    socket.on('answer', async ({ from, answer }) => {
+    socket.on('answer', async ({ from, answer }: any) => {
       const pc = peerConnectionsRef.current.get(from)
       if (pc) {
         await pc.setRemoteDescription(answer)
       }
     })
 
-    socket.on('ice-candidate', ({ from, candidate }) => {
+    socket.on('ice-candidate', ({ from, candidate }: any) => {
       const pc = peerConnectionsRef.current.get(from)
       if (pc) {
         pc.addIceCandidate(new RTCIceCandidate(candidate))
       }
     })
 
-    socket.on('audio-data', ({ from, audio, timestamp }) => {
+    socket.on('audio-data', ({ from, audio, timestamp }: any) => {
       onAudioReceived?.(audio)
     })
 

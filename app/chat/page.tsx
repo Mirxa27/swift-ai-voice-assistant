@@ -166,7 +166,7 @@ export default function ChatPage() {
                 <SparklesIcon className="w-16 h-16 text-purple-400 mb-4" />
                 <p className="text-white/80 text-lg mb-2">Ready to begin?</p>
                 <p className="text-white/60">
-                  Share what's on your mind, or tap the mic to speak
+                  Share what&apos;s on your mind, or tap the mic to speak
                 </p>
               </div>
             ) : (

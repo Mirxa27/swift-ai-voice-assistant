@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     })
     
     const avgSessionTime = sessions.length > 0
-      ? Math.round(sessions.reduce((acc, s) => acc + (s.duration || 0), 0) / sessions.length / 60)
+      ? Math.round(sessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0) / sessions.length / 60)
       : 0
 
     return NextResponse.json({

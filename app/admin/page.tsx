@@ -449,4 +449,5 @@ function SecurityTab() {
         <p className="text-white/60">Security configuration and audit logs coming soon...</p>
       </GlassCard>
     </div>
-  }
+  )
+}

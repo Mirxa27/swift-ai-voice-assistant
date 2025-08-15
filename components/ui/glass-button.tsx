@@ -36,6 +36,8 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       xl: 'px-8 py-4 text-xl',
     }
 
+    const { onClick, type, ...restProps } = props as any
+    
     return (
       <motion.button
         ref={ref}
@@ -52,7 +54,8 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
         disabled={disabled || loading}
         whileHover={{ scale: disabled || loading ? 1 : 1.05 }}
         whileTap={{ scale: disabled || loading ? 1 : 0.95 }}
-        {...props}
+        onClick={onClick}
+        type={type}
       >
         {/* Shimmer effect */}
         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-200%] hover:translate-x-[200%] pointer-events-none" />

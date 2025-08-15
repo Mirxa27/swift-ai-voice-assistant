@@ -1,78 +1,56 @@
-import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
-import { Analytics } from "@vercel/analytics/react";
-import { MobileNav, DesktopNav } from '@/components/ui/mobile-nav'
+import { Toaster } from "@/components/ui/toaster";
 
-const geist = localFont({
-	src: "./fonts/GeistVF.woff",
-	variable: "--font-geist",
-	weight: "100 900",
-	display: "swap",
-});
-const geistMono = localFont({
-	src: "./fonts/GeistMonoVF.woff",
-	variable: "--font-geist-mono",
-	weight: "100 900",
-	display: "swap",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "Newomen - AI Companion for Personal Growth",
-	description: "Your emotionally intelligent AI companion for transformation and personal growth",
-	keywords: ["AI companion", "personal growth", "emotional intelligence", "transformation", "wellness"],
-	authors: [{ name: "Newomen Team" }],
-	manifest: "/manifest.json",
-	appleWebApp: {
-		capable: true,
-		statusBarStyle: "black-translucent",
-		title: "Newomen",
-	},
-	formatDetection: {
-		telephone: false,
-	},
-	openGraph: {
-		type: "website",
-		siteName: "Newomen",
-		title: "Newomen - AI Companion for Personal Growth",
-		description: "Your emotionally intelligent AI companion for transformation and personal growth",
-	},
-	twitter: {
-		card: "summary_large_image",
-		title: "Newomen - AI Companion for Personal Growth",
-		description: "Your emotionally intelligent AI companion for transformation and personal growth",
-	},
-};
-
-export const viewport: Viewport = {
-	themeColor: "#8B5CF6",
-	width: "device-width",
-	initialScale: 1,
-	maximumScale: 1,
-	userScalable: false,
-	viewportFit: "cover",
+  title: "Newomen - AI Conversational Platform",
+  description: "Your AI companion for personal growth and transformation",
+  keywords: "AI, personal growth, wellness, mental health, coaching",
+  authors: [{ name: "Newomen Team" }],
+  openGraph: {
+    title: "Newomen - AI Conversational Platform",
+    description: "Your AI companion for personal growth and transformation",
+    url: "https://newomen.ai",
+    siteName: "Newomen",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Newomen - AI Conversational Platform",
+    description: "Your AI companion for personal growth and transformation",
+    images: ["/opengraph-image.png"],
+  },
+  manifest: "/manifest.json",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{
-	children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-	return (
-		<html lang="en">
-			<head>
-				<link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-				<meta name="apple-mobile-web-app-capable" content="yes" />
-				<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-			</head>
-			<body className={`${geist.variable} ${geistMono.variable} antialiased`}>
-				<DesktopNav />
-				<MobileNav />
-				<Toaster />
-				{children}
-				<Analytics />
-			</body>
-		</html>
-	);
+  return (
+    <html lang="en" className={inter.className}>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <meta name="theme-color" content="#000000" />
+      </head>
+      <body className="bg-black text-white antialiased">
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  );
 }

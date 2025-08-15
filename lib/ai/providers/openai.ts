@@ -51,8 +51,9 @@ export class OpenAIProvider extends BaseAIProvider {
     }
   }
   
-  async transcribeAudio(audio: Buffer): Promise<string> {
-    const file = new File([audio], 'audio.webm', { type: 'audio/webm' })
+  async transcribeAudio(audio: Buffer | ArrayBuffer): Promise<string> {
+    const audioBuffer = audio instanceof Buffer ? audio.buffer.slice(audio.byteOffset, audio.byteOffset + audio.byteLength) : audio
+    const file = new File([audioBuffer as ArrayBuffer], 'audio.webm', { type: 'audio/webm' })
     const transcription = await this.client.audio.transcriptions.create({
       file,
       model: 'whisper-1',
