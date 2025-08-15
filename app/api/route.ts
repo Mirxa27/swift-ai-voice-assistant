@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { after } from "next/server";
+import { addReport } from "../../lib/crisis";
+import { systemPrompt } from "../../lib/systemPrompt";
 
 // Short message returned when the assistant detects a user may be in crisis.
 // The content matches the policy defined in docs/SOP-User-Safety.md
@@ -78,7 +80,9 @@ const schema = zfd.formData({
 });
 
 export async function POST(request: Request) {
-	console.time("transcribe " + request.headers.get("x-vercel-id") || "local");
+        console.time("transcribe " + request.headers.get("x-vercel-id") || "local");
+
+        const language = request.headers.get("x-language") || "English";
 
 	const { data, success } = schema.safeParse(await request.formData());
 	if (!success) return new Response("Invalid request", { status: 400 });
@@ -112,17 +116,7 @@ export async function POST(request: Request) {
 		messages: [
 			{
 				role: "system",
-                                content: `- You are Newomen, a friendly and helpful voice assistant.
-			- Respond briefly to the user's request, and do not provide unnecessary information.
-			- If you don't understand the user's request, ask for clarification.
-			- You do not have access to up-to-date information, so you should not provide real-time data.
-			- You are not capable of performing actions other than responding to the user.
-			- Do not use markdown, emojis, or other formatting in your responses. Respond in a way easily spoken by text-to-speech software.
-			- User location is ${await location()}.
-			- The current time is ${await time()}.
-			- Your large language model is Llama 3, created by Meta, the 8 billion parameter version. It is hosted on Groq, an AI infrastructure company that builds fast inference technology.
-			- Your text-to-speech model is Sonic, created and hosted by Cartesia, a company that builds fast and realistic speech synthesis technology.
-			- You are built with Next.js and hosted on Vercel.`,
+                                content: await systemPrompt(language),
 			},
 			...data.message,
 			{
@@ -132,10 +126,31 @@ export async function POST(request: Request) {
 		],
 	});
 
-        const response = completion.choices[0].message.content;
-        console.timeEnd(
-                "text completion " + request.headers.get("x-vercel-id") || "local"
+        let response = completion.choices[0].message.content || "";
+        const crisisKeywords = [
+                "suicide",
+                "kill myself",
+                "self harm",
+                "harm myself",
+                "abuse",
+        ];
+        const crisisMessage =
+                "It sounds like you are going through a very difficult time. For your safety, please contact a local crisis hotline or trusted professional.";
+
+        const transcriptLower = transcript.toLowerCase();
+        const responseLower = response.toLowerCase();
+        const crisisDetected = crisisKeywords.some(
+                (k) => transcriptLower.includes(k) || responseLower.includes(k)
         );
+        if (crisisDetected) {
+                console.warn("Crisis detected in conversation");
+                await addReport(transcript);
+                response = crisisMessage;
+        }
+	console.timeEnd(
+		"text completion " + request.headers.get("x-vercel-id") || "local"
+	);
+
 
         if (!response) return new Response("Invalid response", { status: 500 });
 
@@ -165,27 +180,38 @@ export async function POST(request: Request) {
                 headers: {
                         "X-Transcript": encodeURIComponent(transcript),
                         "X-Response": encodeURIComponent(finalText),
+                        ...(crisisDetected ? { "X-Crisis": "1" } : {}),
                 },
         });
 }
 
 async function location() {
-	const headersList = await headers();
+        try {
+                const headersList = await headers();
 
-	const country = headersList.get("x-vercel-ip-country");
-	const region = headersList.get("x-vercel-ip-country-region");
-	const city = headersList.get("x-vercel-ip-city");
+                const country = headersList.get("x-vercel-ip-country");
+                const region = headersList.get("x-vercel-ip-country-region");
+                const city = headersList.get("x-vercel-ip-city");
 
-	if (!country || !region || !city) return "unknown";
+                if (!country || !region || !city) return "unknown";
 
-	return `${city}, ${region}, ${country}`;
+                return `${city}, ${region}, ${country}`;
+        } catch {
+                return "unknown";
+        }
 }
 
 async function time() {
-	const headersList = await headers();
-	const timeZone = headersList.get("x-vercel-ip-timezone") || undefined;
-	return new Date().toLocaleString("en-US", { timeZone });
+        try {
+                const headersList = await headers();
+                const timeZone = headersList.get("x-vercel-ip-timezone") || undefined;
+                return new Date().toLocaleString("en-US", { timeZone });
+        } catch {
+                return new Date().toLocaleString("en-US");
+        }
 }
+
+
 
 async function getTranscript(input: string | File) {
         if (typeof input === "string") return input;
