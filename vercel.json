@@ -3,12 +3,6 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install --legacy-peer-deps",
-  "env": {
-    "NEXT_PUBLIC_APP_URL": "@app_url",
-    "DATABASE_URL": "@database_url",
-    "REDIS_URL": "@redis_url",
-    "JWT_SECRET": "@jwt_secret"
-  },
   "build": {
     "env": {
       "NODE_ENV": "production",
