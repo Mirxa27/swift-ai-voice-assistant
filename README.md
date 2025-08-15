@@ -30,11 +30,19 @@ Newomen is a production-ready AI conversational platform designed to support wom
 
 ## 🚀 Quick Start
 
+
+1. Open the app and complete the onboarding flow to choose your language and focus areas.
+2. Ask questions by typing or speaking into your microphone.
+3. Listen to the spoken response and watch your progress bars update after each chat.
+4. Check the "Daily streak" counter on the home page to stay motivated.
+5. Visit `/admin` to view your saved settings, progress, and API key status.
+
 ### Prerequisites
 - Node.js 18+ and npm/pnpm
 - PostgreSQL database
 - Redis server
 - AI provider API keys (at least one)
+
 
 ### Installation
 
