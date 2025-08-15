@@ -1,329 +1,352 @@
-"use client";
+'use client'
 
-import clsx from "clsx";
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { GlassCard } from '@/components/ui/glass-card'
+import { GlassButton } from '@/components/ui/glass-button'
 import {
-        useActionState,
-        useEffect,
-        useRef,
-        useState,
-        startTransition,
-} from "react";
-import { toast } from "sonner";
-import { EnterIcon, LoadingIcon } from "@/lib/icons";
-import { usePlayer } from "@/lib/usePlayer";
-import { track } from "@vercel/analytics";
-import { useMicVAD, utils } from "@ricky0123/vad-react";
-import { useRouter } from "next/navigation";
-import { readJournal, writeJournal } from "@/lib/journal";
+  SparklesIcon,
+  HeartIcon,
+  ChatBubbleLeftRightIcon,
+  UserGroupIcon,
+  TrophyIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline'
 
-type Message = {
-	role: "user" | "assistant";
-	content: string;
-	latency?: number;
-};
+export default function HomePage() {
+  const features = [
+    {
+      icon: ChatBubbleLeftRightIcon,
+      title: 'AI Conversations',
+      description: 'Engage in meaningful dialogue with your emotionally intelligent companion',
+      color: 'from-purple-500 to-pink-500',
+    },
+    {
+      icon: SparklesIcon,
+      title: 'Personal Journey',
+      description: 'Track your transformation with gamified progress and achievements',
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      icon: HeartIcon,
+      title: 'Wellness Practices',
+      description: 'Access guided breathing exercises and mindfulness resources',
+      color: 'from-pink-500 to-rose-500',
+    },
+    {
+      icon: UserGroupIcon,
+      title: 'Community',
+      description: 'Connect with others on similar journeys of growth',
+      color: 'from-green-500 to-emerald-500',
+    },
+    {
+      icon: TrophyIcon,
+      title: 'Achievements',
+      description: 'Earn crystals and unlock new levels as you progress',
+      color: 'from-yellow-500 to-orange-500',
+    },
+    {
+      icon: ChartBarIcon,
+      title: 'Insights',
+      description: 'Gain deep understanding of your patterns and growth areas',
+      color: 'from-indigo-500 to-purple-500',
+    },
+  ]
 
-export default function Home() {
-        const [input, setInput] = useState("");
-        const inputRef = useRef<HTMLInputElement>(null);
-        const player = usePlayer();
-        const router = useRouter();
-        const [language, setLanguage] = useState("English");
-        const [headline, setHeadline] = useState("");
-        const [affirmation, setAffirmation] = useState("");
-        const [focus, setFocus] = useState<string[]>([]);
-        const [progress, setProgress] = useState<Record<string, number>>({});
-        const [crisis, setCrisis] = useState(false);
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          <motion.div
+            className="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full filter blur-3xl opacity-20"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, -30, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+          <motion.div
+            className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500 rounded-full filter blur-3xl opacity-20"
+            animate={{
+              x: [0, -50, 0],
+              y: [0, 30, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        </div>
 
-        const initialMessages: Array<Message> = readJournal();
+        <div className="relative max-w-6xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+              Welcome to{' '}
+              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Newomen
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-3xl mx-auto">
+              Your emotionally intelligent AI companion for personal transformation and growth
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/chat">
+                <GlassButton size="xl" className="min-w-[200px]">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                  Start Conversation
+                </GlassButton>
+              </Link>
+              <Link href="/onboarding">
+                <GlassButton variant="secondary" size="xl" className="min-w-[200px]">
+                  <SparklesIcon className="w-5 h-5" />
+                  Begin Journey
+                </GlassButton>
+              </Link>
+            </div>
+          </motion.div>
 
-        useEffect(() => {
-                const lang = localStorage.getItem("language");
-                const focusAreas = localStorage.getItem("focusAreas");
-                if (!lang || !focusAreas) {
-                        router.push("/onboarding");
-                        return;
-                }
-                setLanguage(lang);
-        }, [router]);
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto"
+          >
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">10K+</div>
+              <div className="text-white/60 mt-1">Active Users</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">500K+</div>
+              <div className="text-white/60 mt-1">Conversations</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">4.9★</div>
+              <div className="text-white/60 mt-1">User Rating</div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-        useEffect(() => {
-                const headlines = [
-                        "Welcome back!",
-                        "Ready to grow today?",
-                        "Your journey continues!",
-                ];
-                const affirmations = [
-                        "You are strong and capable.",
-                        "Every step is progress.",
-                        "Believe in yourself.",
-                ];
-                setHeadline(
-                        headlines[Math.floor(Math.random() * headlines.length)]
-                );
-                setAffirmation(
-                        affirmations[Math.floor(Math.random() * affirmations.length)]
-                );
-                const storedFocus = localStorage.getItem("focusAreas");
-                if (storedFocus) setFocus(JSON.parse(storedFocus));
-                const storedProgress = localStorage.getItem("progress");
-                if (storedProgress) setProgress(JSON.parse(storedProgress));
-        }, []);
+      {/* Features Grid */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Everything You Need for Growth
+            </h2>
+            <p className="text-white/60 text-lg">
+              Comprehensive tools and support for your transformation journey
+            </p>
+          </motion.div>
 
-        const vad = useMicVAD({
-                startOnLoad: true,
-		onSpeechEnd: (audio) => {
-			player.stop();
-			const wav = utils.encodeWAV(audio);
-			const blob = new Blob([wav], { type: "audio/wav" });
-			startTransition(() => submit(blob));
-			const isFirefox = navigator.userAgent.includes("Firefox");
-			if (isFirefox) vad.pause();
-		},
-		positiveSpeechThreshold: 0.6,
-		minSpeechFrames: 4,
-	});
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <GlassCard className="p-6 h-full">
+                  <div
+                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}
+                  >
+                    <feature.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-white/60">
+                    {feature.description}
+                  </p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-	useEffect(() => {
-		function keyDown(e: KeyboardEvent) {
-			if (e.key === "Enter") return inputRef.current?.focus();
-			if (e.key === "Escape") return setInput("");
-		}
+      {/* Subscription Plans */}
+      <section className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Choose Your Path
+            </h2>
+            <p className="text-white/60 text-lg">
+              Flexible plans to support your growth journey
+            </p>
+          </motion.div>
 
-		window.addEventListener("keydown", keyDown);
-		return () => window.removeEventListener("keydown", keyDown);
-	});
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Discovery Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <GlassCard className="p-6 h-full flex flex-col">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">Discovery</h3>
+                  <div className="text-3xl font-bold text-white">
+                    Free
+                    <span className="text-lg text-white/60 ml-2">10 minutes</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6 flex-grow">
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    AI conversations
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Basic assessments
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Limited voice mode
+                  </li>
+                </ul>
+                <GlassButton variant="secondary" fullWidth>
+                  Start Free
+                </GlassButton>
+              </GlassCard>
+            </motion.div>
 
-        const [messages, submit, isPending] = useActionState<
-                Array<Message>,
-                string | Blob
-        >(async (prevMessages, data) => {
-		const formData = new FormData();
+            {/* Growth Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+            >
+              <GlassCard variant="elevated" className="p-6 h-full flex flex-col border-purple-500/50">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">Growth</h3>
+                  <div className="text-3xl font-bold text-white">
+                    $22
+                    <span className="text-lg text-white/60 ml-2">/100 minutes</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6 flex-grow">
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Everything in Discovery
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Unlimited voice mode
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Progress tracking
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Community access
+                  </li>
+                </ul>
+                <GlassButton fullWidth>
+                  Most Popular
+                </GlassButton>
+              </GlassCard>
+            </motion.div>
 
-		if (typeof data === "string") {
-			formData.append("input", data);
-			track("Text input");
-		} else {
-			formData.append("input", data, "audio.wav");
-			track("Speech input");
-		}
+            {/* Transformation Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <GlassCard className="p-6 h-full flex flex-col">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">Transformation</h3>
+                  <div className="text-3xl font-bold text-white">
+                    $222
+                    <span className="text-lg text-white/60 ml-2">/1000 minutes</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6 flex-grow">
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Everything in Growth
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Priority support
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Advanced analytics
+                  </li>
+                  <li className="text-white/80 flex items-start">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Custom AI training
+                  </li>
+                </ul>
+                <GlassButton variant="secondary" fullWidth>
+                  Best Value
+                </GlassButton>
+              </GlassCard>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
-		for (const message of prevMessages) {
-			formData.append("message", JSON.stringify(message));
-		}
-
-		const submittedAt = Date.now();
-
-
-                const response = await fetch("/api", {
-                        method: "POST",
-                        body: formData,
-                        headers: { "X-Language": language },
-                });
-
-                let response: Response;
-                try {
-                        response = await fetch("/api", {
-                                method: "POST",
-                                body: formData,
-                        });
-                } catch {
-                        toast.error("Network error. Please try again.");
-                        return prevMessages;
-                }
-
-		const transcript = decodeURIComponent(
-			response.headers.get("X-Transcript") || ""
-		);
-                const text = decodeURIComponent(response.headers.get("X-Response") || "");
-                const crisisHeader = response.headers.get("X-Crisis") === "1";
-
-                if (!response.ok || !transcript || !text || !response.body) {
-                        if (response.status === 429) {
-                                toast.error("Too many requests. Please try again later.");
-                        } else {
-                                toast.error((await response.text()) || "An error occurred.");
-                        }
-
-                        return prevMessages;
-                }
-
-                const latency = Date.now() - submittedAt;
-                player.play(response.body, () => {
-                        const isFirefox = navigator.userAgent.includes("Firefox");
-                        if (isFirefox) vad.start();
-                });
-                if (crisisHeader) setCrisis(true);
-                setInput(transcript);
-
-                const stored = localStorage.getItem("progress");
-                const next: Record<string, number> = stored ? JSON.parse(stored) : {};
-                for (const area of focus) {
-                        next[area] = Math.min(100, (next[area] ?? 0) + 5);
-                }
-                localStorage.setItem("progress", JSON.stringify(next));
-                setProgress(next);
-
-                return [
-                        ...prevMessages,
-                        {
-                                role: "user",
-				content: transcript,
-			},
-			{
-				role: "assistant",
-				content: text,
-				latency,
-			},
-		];
-        }, initialMessages);
-
-        useEffect(() => {
-                writeJournal(messages);
-        }, [messages]);
-
-        function handleFormSubmit(e: React.FormEvent) {
-                e.preventDefault();
-                if (!crisis) startTransition(() => submit(input));
-        }
-
-        return (
-                <>
-                        {crisis && (
-                                <div className="p-4 mb-4 bg-red-100 border border-red-300 rounded text-red-800 max-w-xl text-center space-y-2">
-                                        <p>
-                                                It sounds like you are going through a very difficult time. For immediate help, please contact the Saudi crisis hotline at <a href="tel:937" className="underline">937</a> or your local emergency services.
-                                        </p>
-                                        <button onClick={() => setCrisis(false)} className="px-4 py-2 bg-red-600 text-white rounded">
-                                                Dismiss
-                                        </button>
-                                </div>
-                        )}
-                        <div className="pb-4 min-h-28" />
-                        <div className="space-y-2 text-center mb-6">
-                                <h1 className="text-2xl font-bold">{headline}</h1>
-                                <p className="text-sm">{affirmation}</p>
-                                {focus.length > 0 ? (
-                                        <div className="space-y-2">
-                                                {focus.map((area) => (
-                                                        <div key={area}>
-                                                                <div className="flex justify-between text-sm">
-                                                                        <span>{area}</span>
-                                                                        <span>{progress[area] ?? 0}%</span>
-                                                                </div>
-                                                                <div className="h-2 bg-neutral-200 rounded">
-                                                                        <div
-                                                                                className="h-2 bg-blue-500 rounded"
-                                                                                style={{ width: `${progress[area] ?? 0}%` }}
-                                                                        />
-                                                                </div>
-                                                        </div>
-                                                ))}
-                                        </div>
-                                ) : (
-                                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                No focus areas selected. Visit&nbsp;
-                                                <A href="/onboarding">onboarding</A>
-                                                &nbsp;to choose some.
-                                        </p>
-                                )}
-                        </div>
-
-			<form
-				className="rounded-full bg-neutral-200/80 dark:bg-neutral-800/80 flex items-center w-full max-w-3xl border border-transparent hover:border-neutral-300 focus-within:border-neutral-400 hover:focus-within:border-neutral-400 dark:hover:border-neutral-700 dark:focus-within:border-neutral-600 dark:hover:focus-within:border-neutral-600"
-				onSubmit={handleFormSubmit}
-			>
-                                <input
-                                        type="text"
-                                        className="bg-transparent focus:outline-hidden p-4 w-full placeholder:text-neutral-600 dark:placeholder:text-neutral-400"
-                                        required
-                                        placeholder="Ask me anything"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        ref={inputRef}
-                                        disabled={crisis}
-                                />
-
-				<button
-					type="submit"
-					className="p-4 text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white"
-                                        disabled={isPending || crisis}
-					aria-label="Submit"
-				>
-					{isPending ? <LoadingIcon /> : <EnterIcon />}
-				</button>
-			</form>
-
-			<div className="text-neutral-400 dark:text-neutral-600 pt-4 text-center max-w-xl text-balance min-h-28 space-y-4">
-				{messages.length > 0 && (
-					<p>
-						{messages.at(-1)?.content}
-						<span className="text-xs font-mono text-neutral-300 dark:text-neutral-700">
-							{" "}
-							({messages.at(-1)?.latency}ms)
-						</span>
-					</p>
-				)}
-
-				{messages.length === 0 && (
-					<>
-						<p>
-							A fast, open-source voice assistant powered by{" "}
-							<A href="https://groq.com">Groq</A>,{" "}
-							<A href="https://cartesia.ai">Cartesia</A>,{" "}
-							<A href="https://www.vad.ricky0123.com/">VAD</A>, and{" "}
-							<A href="https://vercel.com">Vercel</A>.{" "}
-                                                        <A href="https://github.com/ai-ng/newomen" target="_blank">
-                                                                Learn more
-                                                        </A>
-                                                        .
-                                                </p>
-
-                                                <p>
-                                                        <A href="/admin">
-                                                                Admin Panel
-                                                        </A>
-                                                </p>
-                                                <p>
-                                                        <A href="/balance">
-                                                                Balance Wheel
-                                                        </A>
-                                                </p>
-                                                <p>
-                                                        <A href="/journal">
-                                                                Journal
-                                                        </A>
-                                                </p>
-
-						{vad.loading ? (
-							<p>Loading speech detection...</p>
-						) : vad.errored ? (
-							<p>Failed to load speech detection.</p>
-						) : (
-							<p>Start talking to chat.</p>
-						)}
-					</>
-				)}
-			</div>
-
-			<div
-				className={clsx(
-					"absolute size-36 blur-3xl rounded-full bg-linear-to-b from-red-200 to-red-400 dark:from-red-600 dark:to-red-800 -z-50 transition ease-in-out",
-					{
-						"opacity-0": vad.loading || vad.errored,
-						"opacity-30": !vad.loading && !vad.errored && !vad.userSpeaking,
-						"opacity-100 scale-110": vad.userSpeaking,
-					}
-				)}
-			/>
-		</>
-	);
-}
-
-function A(props: any) {
-	return (
-		<a
-			{...props}
-			className="text-neutral-500 dark:text-neutral-500 hover:underline font-medium"
-		/>
-	);
+      {/* CTA Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <GlassCard variant="elevated" className="p-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to Transform Your Life?
+              </h2>
+              <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
+                Join thousands of women on their journey to self-discovery and personal growth
+              </p>
+              <Link href="/onboarding">
+                <GlassButton size="xl">
+                  <SparklesIcon className="w-5 h-5" />
+                  Start Your Journey Today
+                </GlassButton>
+              </Link>
+            </motion.div>
+          </GlassCard>
+        </div>
+      </section>
+    </div>
+  )
 }

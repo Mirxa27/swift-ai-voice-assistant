@@ -38,3 +38,5 @@ next-env.d.ts
 # files copied from npm modules
 public/
 backup/
+
+/lib/generated/prisma

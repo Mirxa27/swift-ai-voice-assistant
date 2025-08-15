@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { readJournal, clearJournal } from "@/lib/journal";
+import { getJournalEntries, clearJournal } from "@/lib/journal";
 
 type Message = {
   role: "user" | "assistant";
@@ -12,7 +12,11 @@ export default function JournalPage() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    setMessages(readJournal());
+    const entries = getJournalEntries();
+    const messages = entries.flatMap(entry => [
+      { role: 'user' as const, content: entry.content }
+    ]);
+    setMessages(messages);
   }, []);
 
   if (messages.length === 0) {
