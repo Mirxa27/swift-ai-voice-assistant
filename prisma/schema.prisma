@@ -1,0 +1,549 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  username          String?   @unique
+  passwordHash      String
+  name              String?
+  avatar            String?
+  bio               String?
+  culturalBackground String?
+  preferredLanguage String    @default("en")
+  isAdmin           Boolean   @default(false)
+  emailVerified     Boolean   @default(false)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastActiveAt      DateTime?
+  
+  // Relations
+  profile           UserProfile?
+  subscription      Subscription?
+  conversations     Conversation[]
+  assessments       Assessment[]
+  achievements      Achievement[]
+  connections       Connection[]     @relation("UserConnections")
+  connectionRequests Connection[]    @relation("UserConnectionRequests")
+  groupMemberships  GroupMember[]
+  challenges        ChallengeProgress[]
+  journalEntries    JournalEntry[]
+  breathingPractices BreathingProgress[]
+  notifications     Notification[]
+  sessions          Session[]
+  
+  @@index([email])
+  @@index([username])
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Gamification
+  level           Int      @default(1)
+  crystals        Int      @default(0)
+  experiencePoints Int     @default(0)
+  streakDays      Int      @default(0)
+  lastStreakDate  DateTime?
+  
+  // Progress Tracking
+  transformationScore Float @default(0)
+  emotionalBalance   Float @default(0)
+  personalGrowth     Float @default(0)
+  relationships      Float @default(0)
+  career             Float @default(0)
+  health             Float @default(0)
+  spirituality       Float @default(0)
+  creativity         Float @default(0)
+  
+  // Personality & Narrative
+  personalityType    String?
+  narrativeStage     String?
+  limitingBeliefs    Json?
+  transformationGoals Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Subscription Management
+model Subscription {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan             SubscriptionPlan
+  status           SubscriptionStatus @default(ACTIVE)
+  minutesRemaining Int
+  minutesUsed      Int      @default(0)
+  
+  // PayPal Integration
+  paypalSubscriptionId String?
+  paypalCustomerId     String?
+  
+  startDate        DateTime @default(now())
+  endDate          DateTime?
+  renewalDate      DateTime?
+  cancelledAt      DateTime?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relations
+  payments         Payment[]
+  usageLogs        UsageLog[]
+}
+
+enum SubscriptionPlan {
+  DISCOVERY      // 10 free minutes
+  GROWTH         // $22/100 minutes
+  TRANSFORMATION // $222/1000 minutes
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PENDING
+  SUSPENDED
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  subscriptionId   String
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id])
+  
+  amount           Float
+  currency         String   @default("USD")
+  status           PaymentStatus
+  paypalPaymentId  String?
+  paypalOrderId    String?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// Conversation Management
+model Conversation {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title           String?
+  mode            ConversationMode @default(TEXT)
+  emotionalState  String?
+  
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  duration        Int?     // in seconds
+  
+  // AI Provider Info
+  aiProvider      String?
+  aiModel         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  messages        Message[]
+  emotionAnalysis EmotionAnalysis[]
+}
+
+enum ConversationMode {
+  TEXT
+  VOICE
+  MIXED
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role           MessageRole
+  content        String   @db.Text
+  audioUrl       String?
+  
+  // Emotion & Analysis
+  emotion        String?
+  sentiment      Float?
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([conversationId])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model EmotionAnalysis {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  timestamp      DateTime
+  emotions       Json     // Detailed emotion scores
+  dominantEmotion String
+  confidence     Float
+  
+  createdAt      DateTime @default(now())
+}
+
+// Assessment System
+model Assessment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        AssessmentType
+  status      AssessmentStatus @default(IN_PROGRESS)
+  score       Float?
+  results     Json?
+  
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  // Relations
+  responses   AssessmentResponse[]
+}
+
+enum AssessmentType {
+  PERSONALITY
+  BALANCE_WHEEL
+  NARRATIVE_IDENTITY
+  EMOTIONAL_INTELLIGENCE
+  RELATIONSHIP_COMPATIBILITY
+  CAREER_ALIGNMENT
+  WELLNESS_CHECK
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+model AssessmentResponse {
+  id           String   @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  
+  questionId   String
+  answer       Json
+  timeSpent    Int?     // in seconds
+  
+  createdAt    DateTime @default(now())
+}
+
+// Gamification System
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        String
+  name        String
+  description String
+  iconUrl     String?
+  
+  progress    Int      @default(0)
+  maxProgress Int
+  completed   Boolean  @default(false)
+  
+  unlockedAt  DateTime?
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, type])
+}
+
+model ChallengeProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  
+  progress    Int      @default(0)
+  completed   Boolean  @default(false)
+  
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([userId, challengeId])
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  
+  title       String
+  description String   @db.Text
+  category    String
+  difficulty  ChallengeDifficulty
+  
+  duration    Int      // in days
+  crystalReward Int
+  xpReward    Int
+  
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  participants ChallengeProgress[]
+}
+
+enum ChallengeDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+// Community Features
+model Connection {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("UserConnections", fields: [userId], references: [id])
+  connectedUserId String
+  connectedUser User     @relation("UserConnectionRequests", fields: [connectedUserId], references: [id])
+  
+  status        ConnectionStatus @default(PENDING)
+  
+  // Compatibility Score
+  compatibilityScore Float?
+  sharedInterests    Json?
+  
+  createdAt     DateTime @default(now())
+  acceptedAt    DateTime?
+  
+  @@unique([userId, connectedUserId])
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  
+  name        String
+  description String?
+  type        GroupType
+  isPrivate   Boolean  @default(false)
+  
+  maxMembers  Int      @default(50)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  members     GroupMember[]
+  sessions    GroupSession[]
+}
+
+enum GroupType {
+  SUPPORT_CIRCLE
+  CHALLENGE_GROUP
+  STUDY_GROUP
+  ACCOUNTABILITY
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role      GroupRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  
+  @@unique([groupId, userId])
+}
+
+enum GroupRole {
+  MEMBER
+  MODERATOR
+  ADMIN
+}
+
+model GroupSession {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
+  title     String
+  startTime DateTime
+  endTime   DateTime
+  
+  createdAt DateTime @default(now())
+}
+
+// Journal & Wellness
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String?
+  content   String   @db.Text
+  mood      String?
+  tags      String[]
+  
+  isPrivate Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BreathingPractice {
+  id          String   @id @default(cuid())
+  
+  name        String
+  description String   @db.Text
+  duration    Int      // in seconds
+  category    String
+  audioUrl    String?
+  
+  difficulty  String
+  benefits    String[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  progress    BreathingProgress[]
+}
+
+model BreathingProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  practiceId String
+  practice   BreathingPractice @relation(fields: [practiceId], references: [id])
+  
+  completedAt DateTime @default(now())
+  duration    Int      // actual duration in seconds
+  
+  @@index([userId, practiceId])
+}
+
+// System & Admin
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  category  String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AIProvider {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  type          String
+  apiKey        String
+  models        Json
+  isActive      Boolean  @default(true)
+  
+  // Usage Tracking
+  totalRequests Int      @default(0)
+  totalCost     Float    @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model UsageLog {
+  id             String   @id @default(cuid())
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  
+  userId         String
+  type           String
+  duration       Int?     // in seconds for voice
+  tokens         Int?     // for text
+  cost           Float?
+  
+  aiProvider     String?
+  aiModel        String?
+  
+  createdAt      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String
+  title     String
+  message   String
+  data      Json?
+  
+  isRead    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token     String   @unique
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  
+  @@index([token])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([entity, entityId])
+}
