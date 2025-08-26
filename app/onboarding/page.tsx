@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const areas = [
@@ -16,6 +17,8 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [language, setLanguage] = useState<string>("English");
   const [focus, setFocus] = useState<string[]>([]);
+
+  const totalSteps = 2;
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language");
@@ -35,6 +38,10 @@ export default function Onboarding() {
       localStorage.setItem("language", language);
       setStep(2);
     } else {
+      if (focus.length === 0) {
+        toast.error("Please select at least one focus area.");
+        return;
+      }
       localStorage.setItem("focusAreas", JSON.stringify(focus));
       const progress: Record<string, number> = {};
       for (const area of focus) progress[area] = 0;
@@ -43,8 +50,13 @@ export default function Onboarding() {
     }
   }
 
+  function back() {
+    if (step === 2) setStep(1);
+  }
+
   return (
     <div className="max-w-md mx-auto space-y-4">
+      <progress value={step} max={totalSteps} className="w-full h-2" />
       {step === 1 && (
         <>
           <h1 className="text-xl font-bold text-center">Choose language</h1>
@@ -89,12 +101,22 @@ export default function Onboarding() {
         </>
       )}
 
-      <button
-        onClick={next}
-        className="w-full p-2 bg-black text-white rounded"
-      >
-        {step === 1 ? "Next" : "Finish"}
-      </button>
+      <div className="flex gap-2">
+        {step === 2 && (
+          <button
+            onClick={back}
+            className="p-2 w-24 rounded border border-black dark:border-white"
+          >
+            Back
+          </button>
+        )}
+        <button
+          onClick={next}
+          className="flex-1 p-2 bg-black text-white rounded"
+        >
+          {step === 1 ? "Next" : "Finish"}
+        </button>
+      </div>
     </div>
   );
 }

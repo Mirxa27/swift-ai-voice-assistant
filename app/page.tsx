@@ -65,17 +65,21 @@ export default function Home() {
 
         const vad = useMicVAD({
                 startOnLoad: true,
-		onSpeechEnd: (audio) => {
-			player.stop();
-			const wav = utils.encodeWAV(audio);
-			const blob = new Blob([wav], { type: "audio/wav" });
-			startTransition(() => submit(blob));
-			const isFirefox = navigator.userAgent.includes("Firefox");
-			if (isFirefox) vad.pause();
-		},
-		positiveSpeechThreshold: 0.6,
-		minSpeechFrames: 4,
-	});
+                onSpeechEnd: (audio) => {
+                        player.stop();
+                        const wav = utils.encodeWAV(audio);
+                        const blob = new Blob([wav], { type: "audio/wav" });
+                        startTransition(() => submit(blob));
+                        const isFirefox = navigator.userAgent.includes("Firefox");
+                        if (isFirefox) vad.pause();
+                },
+                positiveSpeechThreshold: 0.6,
+                minSpeechFrames: 4,
+        });
+
+        useEffect(() => {
+                if (vad.errored) toast.error("Speech detection failed to load.");
+        }, [vad.errored]);
 
 	useEffect(() => {
 		function keyDown(e: KeyboardEvent) {
@@ -107,10 +111,16 @@ export default function Home() {
 
 		const submittedAt = Date.now();
 
-		const response = await fetch("/api", {
-			method: "POST",
-			body: formData,
-		});
+                let response: Response;
+                try {
+                        response = await fetch("/api", {
+                                method: "POST",
+                                body: formData,
+                        });
+                } catch {
+                        toast.error("Network error. Please try again.");
+                        return prevMessages;
+                }
 
 		const transcript = decodeURIComponent(
 			response.headers.get("X-Transcript") || ""
@@ -128,10 +138,18 @@ export default function Home() {
 		}
 
                 const latency = Date.now() - submittedAt;
-                player.play(response.body, () => {
-                        const isFirefox = navigator.userAgent.includes("Firefox");
-                        if (isFirefox) vad.start();
-                });
+                player
+                        .play(response.body, () => {
+                                const isFirefox = navigator.userAgent.includes(
+                                        "Firefox"
+                                );
+                                if (isFirefox) vad.start();
+                        })
+                        .catch(() =>
+                                toast.error(
+                                        "Audio playback failed. Please try again."
+                                )
+                        );
                 setInput(transcript);
 
                 const stored = localStorage.getItem("progress");
@@ -161,13 +179,14 @@ export default function Home() {
 		startTransition(() => submit(input));
 	}
 
-	return (
+        return (
                 <>
-                        <div className="pb-4 min-h-28" />
-                        <div className="space-y-2 text-center mb-6">
+                        <div className="w-full max-w-md mx-auto">
+                                <div className="pb-4 min-h-28" />
+                                <div className="space-y-2 text-center mb-6">
                                 <h1 className="text-2xl font-bold">{headline}</h1>
                                 <p className="text-sm">{affirmation}</p>
-                                {focus.length > 0 && (
+                                {focus.length > 0 ? (
                                         <div className="space-y-2">
                                                 {focus.map((area) => (
                                                         <div key={area}>
@@ -175,7 +194,7 @@ export default function Home() {
                                                                         <span>{area}</span>
                                                                         <span>{progress[area] ?? 0}%</span>
                                                                 </div>
-                                                                <div className="h-2 bg-neutral-200 rounded">
+                                                                <div className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded">
                                                                         <div
                                                                                 className="h-2 bg-blue-500 rounded"
                                                                                 style={{ width: `${progress[area] ?? 0}%` }}
@@ -184,6 +203,12 @@ export default function Home() {
                                                         </div>
                                                 ))}
                                         </div>
+                                ) : (
+                                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                No focus areas selected. Visit&nbsp;
+                                                <A href="/onboarding">onboarding</A>
+                                                &nbsp;to choose some.
+                                        </p>
                                 )}
                         </div>
 
@@ -191,15 +216,16 @@ export default function Home() {
 				className="rounded-full bg-neutral-200/80 dark:bg-neutral-800/80 flex items-center w-full max-w-3xl border border-transparent hover:border-neutral-300 focus-within:border-neutral-400 hover:focus-within:border-neutral-400 dark:hover:border-neutral-700 dark:focus-within:border-neutral-600 dark:hover:focus-within:border-neutral-600"
 				onSubmit={handleFormSubmit}
 			>
-				<input
-					type="text"
-					className="bg-transparent focus:outline-hidden p-4 w-full placeholder:text-neutral-600 dark:placeholder:text-neutral-400"
-					required
-					placeholder="Ask me anything"
-					value={input}
-					onChange={(e) => setInput(e.target.value)}
-					ref={inputRef}
-				/>
+                                <input
+                                        type="text"
+                                        className="bg-transparent focus:outline-hidden p-4 w-full placeholder:text-neutral-600 dark:placeholder:text-neutral-400"
+                                        required
+                                        placeholder="Ask me anything"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        ref={inputRef}
+                                        disabled={isPending}
+                                />
 
 				<button
 					type="submit"
@@ -211,16 +237,22 @@ export default function Home() {
 				</button>
 			</form>
 
-			<div className="text-neutral-400 dark:text-neutral-600 pt-4 text-center max-w-xl text-balance min-h-28 space-y-4">
-				{messages.length > 0 && (
-					<p>
-						{messages.at(-1)?.content}
-						<span className="text-xs font-mono text-neutral-300 dark:text-neutral-700">
-							{" "}
-							({messages.at(-1)?.latency}ms)
-						</span>
-					</p>
-				)}
+                        <div className="text-neutral-400 dark:text-neutral-600 pt-4 text-center max-w-xl text-balance min-h-28 space-y-4">
+                                {isPending && (
+                                        <div className="flex justify-center">
+                                                <LoadingIcon />
+                                        </div>
+                                )}
+
+                                {messages.length > 0 && (
+                                        <p>
+                                                {messages.at(-1)?.content}
+                                                <span className="text-xs font-mono text-neutral-300 dark:text-neutral-700">
+                                                        {" "}
+                                                        ({messages.at(-1)?.latency}ms)
+                                                </span>
+                                        </p>
+                                )}
 
 				{messages.length === 0 && (
 					<>
@@ -251,14 +283,15 @@ export default function Home() {
 						)}
 					</>
 				)}
-			</div>
+                        </div>
+                        </div>
 
-			<div
-				className={clsx(
-					"absolute size-36 blur-3xl rounded-full bg-linear-to-b from-red-200 to-red-400 dark:from-red-600 dark:to-red-800 -z-50 transition ease-in-out",
-					{
-						"opacity-0": vad.loading || vad.errored,
-						"opacity-30": !vad.loading && !vad.errored && !vad.userSpeaking,
+                        <div
+                                className={clsx(
+                                        "absolute size-36 blur-3xl rounded-full bg-linear-to-b from-red-200 to-red-400 dark:from-red-600 dark:to-red-800 -z-50 transition ease-in-out",
+                                        {
+                                                "opacity-0": vad.loading || vad.errored,
+                                                "opacity-30": !vad.loading && !vad.errored && !vad.userSpeaking,
 						"opacity-100 scale-110": vad.userSpeaking,
 					}
 				)}
